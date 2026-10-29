@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      API_INTERNAL_URL: http://localhost:5099
+      NEXT_PUBLIC_API_URL: http://localhost:5099
+      NEXT_PUBLIC_SITE_URL: https://staging.loja.exemplo.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+      - name: Build (contra API stub)
+        run: |
+          node scripts/ci-api-stub.mjs &
+          npm run build
+
+      # SEO ≥ 95 e acessibilidade ≥ 90 bloqueiam; performance é aviso até termos o CDN de imagens (arquivo 16 §8).
+      - name: Lighthouse CI (home, categoria, produto)
+        run: |
+          curl -sf http://localhost:5099/api/v1/catalog/categories > /dev/null || (node scripts/ci-api-stub.mjs &)
+          npx --yes @lhci/cli@0.15.1 autorun
