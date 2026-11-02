@@ -9,11 +9,14 @@ export interface ShippingOption {
   originalPrice: number;
   /** Nulo nos valores de contingência: sem o provedor, não há prazo a informar. */
   deliveryDays: number | null;
+  appliedRules: string[];
 }
 
 export interface ShippingQuotes {
   options: ShippingOption[];
   isFallback: boolean;
+  /** Quanto falta para o frete ficar grátis, quando há regra da loja para isso. */
+  freeShippingRemaining: number | null;
 }
 
 export interface ShippingItem {

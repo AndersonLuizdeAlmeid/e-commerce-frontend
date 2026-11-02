@@ -462,6 +462,7 @@ function adminProductDetails(product) {
 
 const stockMovements = [];
 let shippingSettings = null;
+const shippingRules = [];
 
 function stockRows() {
   return admin.products.flatMap((product) =>
@@ -593,6 +594,19 @@ function adminRoute(method, path, query, body) {
   }
 
   if (resource === "stock") return stockRoute(method, id, sub, query, body);
+  if (resource === "shipping" && id === "rules") {
+    if (method === "GET") return { status: 200, body: shippingRules };
+    if (method === "POST") {
+      const rule = { id: newId(), ...body };
+      shippingRules.push(rule);
+      return { status: 201, body: { id: rule.id } };
+    }
+    const index = shippingRules.findIndex((rule) => rule.id === sub);
+    if (index < 0) return problem(404, "Regra de frete não encontrada.");
+    if (method === "PUT") shippingRules[index] = { id: sub, ...body };
+    else shippingRules.splice(index, 1);
+    return noContent;
+  }
   if (resource === "shipping") {
     if (method === "PUT") {
       shippingSettings = body;
@@ -805,8 +819,11 @@ function browserRoute(method, path, query, body) {
   if (path === "/api/v1/catalog/variants/lookup") return { status: 200, body: cartLookup(body.items) };
   if (path === "/api/v1/shipping/quotes") {
     if (String(body.postalCode).replace(/\D/g, "").length !== 8) return problem(400, "CEP inválido: informe os 8 números.", "Shipping.InvalidPostalCode");
-    const options = [{ serviceCode: "PAC", name: "PAC", price: 21.4, originalPrice: 21.4, deliveryDays: 8 }, { serviceCode: "SEDEX", name: "SEDEX", price: 38.9, originalPrice: 38.9, deliveryDays: 4 }];
-    return { status: 200, body: { options, isFallback: false } };
+    const options = [
+      { serviceCode: "PAC", name: "PAC", price: 21.4, originalPrice: 21.4, deliveryDays: 8, appliedRules: [] },
+      { serviceCode: "SEDEX", name: "SEDEX", price: 38.9, originalPrice: 38.9, deliveryDays: 4, appliedRules: [] },
+    ];
+    return { status: 200, body: { options, isFallback: false, freeShippingRemaining: null } };
   }
   if (path === "/api/v1/auth/login" || path === "/api/v1/auth/refresh") return { status: 200, body: session };
   if (path === "/api/v1/auth/logout") return noContent;

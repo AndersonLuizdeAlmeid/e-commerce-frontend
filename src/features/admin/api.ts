@@ -267,6 +267,26 @@ export interface ShippingSettings {
   boxLengthCm: number;
 }
 
+export type ShippingRuleEffect = "FreeShipping" | "PercentDiscount" | "FixedDiscount" | "Surcharge" | "HideService";
+
+export interface ShippingRuleInput {
+  name: string;
+  priority: number;
+  isActive: boolean;
+  validFrom: string | null;
+  validTo: string | null;
+  minSubtotal: number | null;
+  states: string[];
+  postalCodeRanges: { from: string; to: string }[];
+  serviceCodes: string[];
+  effect: ShippingRuleEffect;
+  effectValue: number | null;
+}
+
+export interface ShippingRule extends ShippingRuleInput {
+  id: string;
+}
+
 export interface StockFilters {
   page: number;
   search: string;
@@ -379,6 +399,10 @@ export const adminApi = {
   /** Nulo enquanto a loja não configurou o frete (a API responde 204). */
   shippingSettings: async () => (await get<ShippingSettings | undefined>("/shipping/settings")) ?? null,
   saveShippingSettings: (settings: ShippingSettings) => send("PUT", "/shipping/settings", settings),
+  shippingRules: () => get<ShippingRule[]>("/shipping/rules"),
+  createShippingRule: (rule: ShippingRuleInput) => send<{ id: string }>("POST", "/shipping/rules", rule),
+  updateShippingRule: (id: string, rule: ShippingRuleInput) => send("PUT", `/shipping/rules/${id}`, rule),
+  deleteShippingRule: (id: string) => send("DELETE", `/shipping/rules/${id}`),
 };
 
 export const adminKeys = {
@@ -391,5 +415,6 @@ export const adminKeys = {
   occasions: ["admin", "occasions"] as const,
   stock: ["admin", "stock"] as const,
   shippingSettings: ["admin", "shipping", "settings"] as const,
+  shippingRules: ["admin", "shipping", "rules"] as const,
   product: (id: string) => ["admin", "product", id] as const,
 };

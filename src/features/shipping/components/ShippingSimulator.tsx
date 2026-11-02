@@ -133,10 +133,22 @@ export function ShippingSimulator({ items, pendingHint, auto = false, id }: Ship
                     <span className="font-medium">{option.name}</span>
                     <span className="numeros ml-2 opacity-80">{deliveryLabel(option.deliveryDays)}</span>
                   </span>
-                  <span className="numeros font-medium">{option.price === 0 ? "Grátis" : formatPrice(option.price)}</span>
+                  <span className="numeros text-right">
+                    {option.price !== option.originalPrice && (
+                      <span className="mr-2 opacity-70">
+                        <span className="sr-only">de </span>
+                        <s>{formatPrice(option.originalPrice)}</s>
+                        <span className="sr-only"> por </span>
+                      </span>
+                    )}
+                    <span className="font-medium">{option.price === 0 ? "Grátis" : formatPrice(option.price)}</span>
+                  </span>
                 </li>
               ))}
             </ul>
+            {quotes.freeShippingRemaining !== null && (
+              <p className="numeros mt-1 font-medium">Faltam {formatPrice(quotes.freeShippingRemaining)} para frete grátis.</p>
+            )}
             {quotes.isFallback && <p className="mt-1 text-xs opacity-80">Valor estimado: não conseguimos consultar os Correios agora.</p>}
           </>
         )}
