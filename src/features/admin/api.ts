@@ -221,6 +221,47 @@ export interface OccasionInput {
   productIds: string[];
 }
 
+export interface StockItem {
+  variantId: string;
+  productId: string;
+  productName: string;
+  imageUrl: string | null;
+  colorName: string | null;
+  sizeName: string | null;
+  sku: string;
+  barcode: string | null;
+  quantityOnHand: number;
+  lowStockThreshold: number;
+  isActive: boolean;
+}
+
+export type StockMovementType = "In" | "Out" | "Adjustment";
+
+export interface StockMovement {
+  id: string;
+  type: StockMovementType | "OrderPlaced" | "OrderCancelled";
+  quantity: number;
+  reason: string | null;
+  performedBy: string | null;
+  createdAt: string;
+}
+
+export interface StockScanResult {
+  variantId: string;
+  productId: string;
+  productName: string;
+  colorName: string | null;
+  sizeName: string | null;
+  sku: string;
+  quantityOnHand: number;
+}
+
+export interface StockFilters {
+  page: number;
+  search: string;
+  lowStock: boolean;
+}
+
 const ROOT = "/api/v1/admin";
 
 const get = <T>(path: string) => apiRequest<T>(`${ROOT}${path}`, { auth: true });
@@ -312,6 +353,17 @@ export const adminApi = {
   removeOccasionImage: (id: string) => send("DELETE", `/occasions/${id}/image`),
 
   variantByBarcode: (code: string) => get<VariantByBarcode>(`/variants/by-barcode/${encodeURIComponent(code)}`),
+
+  stock: ({ page, search, lowStock }: StockFilters) => {
+    const query = new URLSearchParams({ page: String(page) });
+    if (search) query.set("search", search);
+    if (lowStock) query.set("lowStock", "true");
+    return get<Paged<StockItem>>(`/stock?${query}`);
+  },
+  stockMovements: (variantId: string, page: number) => get<Paged<StockMovement>>(`/stock/${variantId}/movements?page=${page}`),
+  moveStock: (variantId: string, type: StockMovementType, quantity: number, reason: string) =>
+    send<{ variantId: string; quantityOnHand: number }>("POST", `/stock/${variantId}/movements`, { type, quantity, reason }),
+  scanStock: (barcode: string, quantity: number) => send<StockScanResult>("POST", "/stock/scan", { barcode, quantity }),
 };
 
 export const adminKeys = {
@@ -322,5 +374,6 @@ export const adminKeys = {
   collections: ["admin", "collections"] as const,
   featured: ["admin", "featured"] as const,
   occasions: ["admin", "occasions"] as const,
+  stock: ["admin", "stock"] as const,
   product: (id: string) => ["admin", "product", id] as const,
 };

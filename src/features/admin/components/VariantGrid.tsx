@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { useState } from "react";
 import { errorMessage } from "@/shared/api/problem";
 import { formatPrice } from "@/shared/lib/format";
@@ -95,6 +96,7 @@ export function VariantGrid({ product, onChanged }: { product: AdminProduct; onC
   });
 
   const hasEmptyStock = product.variants.length > 0 && product.variants.every((variant) => variant.quantityOnHand === 0);
+  const stockHref = `/admin/estoque?busca=${encodeURIComponent(product.name)}`;
 
   return (
     <div className="mt-3 space-y-6">
@@ -207,8 +209,16 @@ export function VariantGrid({ product, onChanged }: { product: AdminProduct; onC
         </div>
       )}
 
+      {product.variants.length > 0 && (
+        <p className="text-sm">
+          <Link href={stockHref} className={adminLink}>Movimentar o estoque desta peça</Link>
+        </p>
+      )}
+
       {hasEmptyStock && (
-        <FormAlert kind="info">Sem estoque, a peça aparece como esgotada na loja. A entrada de estoque pelo painel chega na próxima fase (Fase 3).</FormAlert>
+        <FormAlert kind="info">
+          Sem estoque, a peça aparece como esgotada na loja. <Link href={stockHref} className="underline">Dê entrada no estoque.</Link>
+        </FormAlert>
       )}
 
       {scanningFor && (

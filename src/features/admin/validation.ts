@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { CardTheme, CategoryInput, CollectionInput, OccasionInput, ProductInput } from "./api";
+import type { CardTheme, CategoryInput, CollectionInput, OccasionInput, ProductInput, StockMovementType } from "./api";
 
 /** Regras dos formulários do painel, no mesmo limite da API (RF-050, RF-051, RF-056). Funções puras, testadas. */
 
@@ -35,6 +35,18 @@ export function isValidBarcode(value: string): boolean {
     sum += Number(digits[i]) * weight;
   }
   return (10 - (sum % 10)) % 10 === Number(digits[digits.length - 1]);
+}
+
+const MAX_STOCK = 1_000_000;
+
+/** Entrada e saída pedem ao menos 1; no ajuste, a quantidade é o total contado, e zero é um total válido (RF-052). */
+export function parseMovementQuantity(type: StockMovementType, value: string): number | null {
+  const text = value.trim();
+  if (!/^\d+$/.test(text) || Number(text) > MAX_STOCK) {
+    return null;
+  }
+  const quantity = Number(text);
+  return type !== "Adjustment" && quantity === 0 ? null : quantity;
 }
 
 /** ProblemDetails manda "input.Name" ou "sku"; os formulários usam "name" e "sku". */

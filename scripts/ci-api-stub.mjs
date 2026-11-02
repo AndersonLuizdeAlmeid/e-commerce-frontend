@@ -460,6 +460,74 @@ function adminProductDetails(product) {
   };
 }
 
+const stockMovements = [];
+
+function stockRows() {
+  return admin.products.flatMap((product) =>
+    product.variants.map((variant) => ({
+      variantId: variant.id,
+      productId: product.id,
+      productName: product.name,
+      imageUrl: product.images[0]?.url ?? null,
+      colorName: admin.colors.find((color) => color.id === variant.colorId)?.name ?? null,
+      sizeName: admin.sizes.find((size) => size.id === variant.sizeId)?.name ?? null,
+      sku: variant.sku,
+      barcode: variant.barcode,
+      quantityOnHand: variant.quantityOnHand,
+      lowStockThreshold: 3,
+      isActive: product.isActive && variant.isActive,
+    })),
+  );
+}
+
+const pageOf = (items, page, pageSize) => ({
+  items: items.slice((page - 1) * pageSize, page * pageSize),
+  page,
+  pageSize,
+  totalItems: items.length,
+  totalPages: Math.ceil(items.length / pageSize),
+});
+
+function applyStockMovement(variant, type, delta, reason) {
+  variant.quantityOnHand += delta;
+  stockMovements.unshift({
+    id: newId(),
+    variantId: variant.id,
+    type,
+    quantity: delta,
+    reason,
+    performedBy: session.user.email,
+    createdAt: new Date().toISOString(),
+  });
+}
+
+function stockRoute(method, id, sub, query, body) {
+  const page = Number(query.get("page") ?? 1);
+  if (id === "scan") {
+    const variant = allVariants().find((item) => item.barcode === body.barcode);
+    if (!variant) return problem(404, "Nenhuma variação tem este código de barras.", "Catalog.BarcodeNotFound");
+    applyStockMovement(variant, "In", body.quantity ?? 1, "Entrada por leitura");
+    const row = stockRows().find((item) => item.variantId === variant.id);
+    return { status: 200, body: row };
+  }
+  if (!id) {
+    const search = query.get("search")?.toLowerCase();
+    const rows = stockRows()
+      .filter((row) => query.get("lowStock") !== "true" || (row.isActive && row.quantityOnHand <= row.lowStockThreshold))
+      .filter((row) => !search || row.productName.toLowerCase().includes(search) || row.sku.toLowerCase().includes(search) || row.barcode === search);
+    return { status: 200, body: pageOf(rows, page, Number(query.get("pageSize") ?? 30)) };
+  }
+  const variant = allVariants().find((item) => item.id === id);
+  if (!variant) return problem(404, "Variação não encontrada.");
+  if (method === "GET") {
+    return { status: 200, body: pageOf(stockMovements.filter((item) => item.variantId === id), page, Number(query.get("pageSize") ?? 20)) };
+  }
+  const delta = body.type === "In" ? body.quantity : body.type === "Out" ? -body.quantity : body.quantity - variant.quantityOnHand;
+  if (variant.quantityOnHand + delta < 0) return problem(422, "Estoque insuficiente: o saldo não pode ficar negativo.", "Inventory.InsufficientStock");
+  if (delta !== 0) applyStockMovement(variant, body.type, delta, body.reason);
+  return { status: 200, body: { variantId: id, quantityOnHand: variant.quantityOnHand } };
+}
+
 function adminRoute(method, path, query, body) {
   const parts = path.replace("/api/v1/admin/", "").split("/");
   const [resource, id, sub, subId, action] = parts;
@@ -522,6 +590,8 @@ function adminRoute(method, path, query, body) {
     const variant = product.variants.find((item) => item.barcode === code);
     return { status: 200, body: { variantId: variant.id, productId: product.id, productName: product.name, sku: variant.sku, barcode: code } };
   }
+
+  if (resource === "stock") return stockRoute(method, id, sub, query, body);
 
   if (resource !== "products") return undefined;
 
