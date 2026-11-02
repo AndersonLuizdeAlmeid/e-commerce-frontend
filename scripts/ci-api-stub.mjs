@@ -768,7 +768,33 @@ function parseUpload(buffer, contentType) {
   return { ...fields, fileName, isImage };
 }
 
+function cartLookup(lines) {
+  const items = lines.flatMap(({ variantId, quantity }) => {
+    const found = products.find(({ details }) => details.variants.some((variant) => variant.id === variantId));
+    if (!found) return [];
+    const variant = found.details.variants.find((item) => item.id === variantId);
+    return [{
+      variantId,
+      productId: found.summary.id,
+      productName: found.summary.name,
+      productSlug: found.summary.slug,
+      colorName: found.details.colors.find((color) => color.id === variant.colorId)?.name ?? null,
+      sizeName: found.details.sizes.find((size) => size.id === variant.sizeId)?.name ?? null,
+      variantLabels: { color: "Acabamento", size: "Tamanho" },
+      imageUrl: found.details.images[0]?.url ?? null,
+      imageAlt: found.details.images[0]?.alt ?? null,
+      unitPrice: variant.price,
+      quantity,
+      lineTotal: variant.price * quantity,
+      status: variant.available ? "Available" : "OutOfStock",
+      availableQuantity: null,
+    }];
+  });
+  return { items, subtotal: items.filter((item) => item.status === "Available").reduce((total, item) => total + item.lineTotal, 0) };
+}
+
 function browserRoute(method, path, query, body) {
+  if (path === "/api/v1/catalog/variants/lookup") return { status: 200, body: cartLookup(body.items) };
   if (path === "/api/v1/auth/login" || path === "/api/v1/auth/refresh") return { status: 200, body: session };
   if (path === "/api/v1/auth/logout") return noContent;
   if (path === "/api/v1/auth/me") return { status: 200, body: session.user };

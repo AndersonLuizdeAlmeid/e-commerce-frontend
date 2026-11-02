@@ -1,3 +1,4 @@
+import { AddFeaturedButton } from "@/features/cart/components/AddFeaturedButton";
 import type { CardTheme, ProductSummary } from "../api";
 import { Cartela, CartelaVazia } from "./Cartela";
 
@@ -45,7 +46,7 @@ export function ProductGrid({
       {products.map((product, index) => {
         const highlighted = highlightFirst && index === 0;
         return (
-          <li key={product.id} className={highlighted ? "col-span-2" : undefined}>
+          <li key={product.id} className={highlighted ? "relative col-span-2" : undefined}>
             <Cartela
               product={product}
               priority={!fileiraDeQuatro && index < PRIORITY_IMAGES}
@@ -54,6 +55,12 @@ export function ProductGrid({
               tituloComo={tituloComo}
               cor={index === 0 ? corDaPrimeira : undefined}
             />
+            {/* Fora do link da cartela (botão dentro de link não vale), sobre o espaço que a cartela reserva. */}
+            {highlighted && (
+              <div className="absolute bottom-6 left-4 sm:bottom-8 sm:left-[calc(3.5rem+0.55*(100%-3rem))]">
+                <AddFeaturedButton slug={product.slug} colorSlug={corDaPrimeira} />
+              </div>
+            )}
           </li>
         );
       })}

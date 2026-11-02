@@ -30,6 +30,17 @@ export function SearchIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** O saquinho de juta da MO, com a boca franzida pelo cordão (specs/26 §2.4). */
+export function BagIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M8.5 8.5C6 11 4.8 14 4.8 16.8c0 2.6 1.6 4.2 4.2 4.2h6c2.6 0 4.2-1.6 4.2-4.2 0-2.8-1.2-5.8-3.7-8.3" />
+      <path d="M8.5 8.5h7" />
+      <path d="M9 8.5C8.6 6.6 7.9 5 7 3.6c1.7.6 3.3.6 5 0 1.7.6 3.3.6 5 0-.9 1.4-1.6 3-2 4.9" />
+    </Icon>
+  );
+}
+
 export function UserIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <Icon {...props}>
