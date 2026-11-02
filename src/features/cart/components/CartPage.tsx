@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { sombraCartela } from "@/features/catalog/components/Cartela";
+import { ShippingSimulator } from "@/features/shipping/components/ShippingSimulator";
 import { errorMessage } from "@/shared/api/problem";
 import { formatPrice } from "@/shared/lib/format";
 import { BagIcon } from "@/shared/ui/icons";
@@ -153,7 +154,14 @@ export function CartPage() {
                 <span className="text-sm">Subtotal</span>
                 <span className="numeros font-display text-2xl">{formatPrice(view.subtotal)}</span>
               </p>
-              <p className="mt-1 text-xs text-tinta-suave">O frete aparece aqui quando o cálculo por CEP entrar na loja.</p>
+              <div className="mt-5 border-t border-linha pt-4">
+                <ShippingSimulator
+                  id="sacola"
+                  auto
+                  items={view.items.filter((item) => item.status === "Available" || item.status === "InsufficientStock").map(({ variantId, quantity }) => ({ variantId, quantity }))}
+                  pendingHint="As peças da sacola estão indisponíveis."
+                />
+              </div>
 
               {blocked ? (
                 <p className="mt-5 text-sm font-medium">Ajuste as peças destacadas para seguir.</p>

@@ -256,6 +256,17 @@ export interface StockScanResult {
   quantityOnHand: number;
 }
 
+export interface ShippingSettings {
+  originPostalCode: string;
+  handlingDays: number;
+  fallbackPacPrice: number;
+  fallbackSedexPrice: number;
+  boxWeightGrams: number;
+  boxHeightCm: number;
+  boxWidthCm: number;
+  boxLengthCm: number;
+}
+
 export interface StockFilters {
   page: number;
   search: string;
@@ -364,6 +375,10 @@ export const adminApi = {
   moveStock: (variantId: string, type: StockMovementType, quantity: number, reason: string) =>
     send<{ variantId: string; quantityOnHand: number }>("POST", `/stock/${variantId}/movements`, { type, quantity, reason }),
   scanStock: (barcode: string, quantity: number) => send<StockScanResult>("POST", "/stock/scan", { barcode, quantity }),
+
+  /** Nulo enquanto a loja não configurou o frete (a API responde 204). */
+  shippingSettings: async () => (await get<ShippingSettings | undefined>("/shipping/settings")) ?? null,
+  saveShippingSettings: (settings: ShippingSettings) => send("PUT", "/shipping/settings", settings),
 };
 
 export const adminKeys = {
@@ -375,5 +390,6 @@ export const adminKeys = {
   featured: ["admin", "featured"] as const,
   occasions: ["admin", "occasions"] as const,
   stock: ["admin", "stock"] as const,
+  shippingSettings: ["admin", "shipping", "settings"] as const,
   product: (id: string) => ["admin", "product", id] as const,
 };

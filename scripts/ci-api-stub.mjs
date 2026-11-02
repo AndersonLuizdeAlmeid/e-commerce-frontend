@@ -461,6 +461,7 @@ function adminProductDetails(product) {
 }
 
 const stockMovements = [];
+let shippingSettings = null;
 
 function stockRows() {
   return admin.products.flatMap((product) =>
@@ -592,6 +593,13 @@ function adminRoute(method, path, query, body) {
   }
 
   if (resource === "stock") return stockRoute(method, id, sub, query, body);
+  if (resource === "shipping") {
+    if (method === "PUT") {
+      shippingSettings = body;
+      return noContent;
+    }
+    return shippingSettings ? { status: 200, body: shippingSettings } : noContent;
+  }
 
   if (resource !== "products") return undefined;
 
@@ -795,6 +803,11 @@ function cartLookup(lines) {
 
 function browserRoute(method, path, query, body) {
   if (path === "/api/v1/catalog/variants/lookup") return { status: 200, body: cartLookup(body.items) };
+  if (path === "/api/v1/shipping/quotes") {
+    if (String(body.postalCode).replace(/\D/g, "").length !== 8) return problem(400, "CEP inválido: informe os 8 números.", "Shipping.InvalidPostalCode");
+    const options = [{ serviceCode: "PAC", name: "PAC", price: 21.4, originalPrice: 21.4, deliveryDays: 8 }, { serviceCode: "SEDEX", name: "SEDEX", price: 38.9, originalPrice: 38.9, deliveryDays: 4 }];
+    return { status: 200, body: { options, isFallback: false } };
+  }
   if (path === "/api/v1/auth/login" || path === "/api/v1/auth/refresh") return { status: 200, body: session };
   if (path === "/api/v1/auth/logout") return noContent;
   if (path === "/api/v1/auth/me") return { status: 200, body: session.user };

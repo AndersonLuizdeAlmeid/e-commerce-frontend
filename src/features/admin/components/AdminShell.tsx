@@ -14,6 +14,7 @@ const NAV = [
   { href: "/admin/vitrine", label: "Vitrine" },
   { href: "/admin/categorias", label: "Categorias" },
   { href: "/admin/grade", label: "Acabamentos e tamanhos" },
+  { href: "/admin/frete", label: "Frete" },
 ];
 
 /**

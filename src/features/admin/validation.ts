@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { CardTheme, CategoryInput, CollectionInput, OccasionInput, ProductInput, StockMovementType } from "./api";
+import type { CardTheme, CategoryInput, CollectionInput, OccasionInput, ProductInput, ShippingSettings, StockMovementType } from "./api";
 
 /** Regras dos formulários do painel, no mesmo limite da API (RF-050, RF-051, RF-056). Funções puras, testadas. */
 
@@ -47,6 +47,42 @@ export function parseMovementQuantity(type: StockMovementType, value: string): n
   }
   const quantity = Number(text);
   return type !== "Adjustment" && quantity === 0 ? null : quantity;
+}
+
+const wholeBetween = (min: number, max: number, message: string) =>
+  z.string().refine((value) => /^\d+$/.test(value.trim()) && Number(value) >= min && Number(value) <= max, message);
+
+const decimalUpTo = (max: number, message: string) => z.string().refine((value) => (parseDecimal(value) ?? 0) > 0 && (parseDecimal(value) ?? 0) <= max, message);
+
+/** "0" é contingência válida (frete grátis enquanto os Correios estão fora), mas `parseDecimal` só aceita positivo. */
+const moneyOrZero = z.string().refine((value) => value.trim() === "0" || value.trim() === "0,00" || (parseDecimal(value) ?? 0) > 0, "Informe um valor, como 25,00.");
+
+const toMoney = (value: string) => parseDecimal(value) ?? 0;
+
+export const shippingSettingsSchema = z.object({
+  originPostalCode: z.string().refine((value) => /^\d{5}-?\d{3}$/.test(value.trim()), "Informe os 8 números do CEP."),
+  handlingDays: wholeBetween(0, 30, "Informe de 0 a 30 dias."),
+  fallbackPacPrice: moneyOrZero,
+  fallbackSedexPrice: moneyOrZero,
+  boxWeightGrams: wholeBetween(0, 30000, "Informe o peso em gramas, até 30 kg."),
+  boxHeightCm: decimalUpTo(200, "Informe de 0,1 a 200 cm."),
+  boxWidthCm: decimalUpTo(200, "Informe de 0,1 a 200 cm."),
+  boxLengthCm: decimalUpTo(200, "Informe de 0,1 a 200 cm."),
+});
+
+export type ShippingSettingsFormValues = z.infer<typeof shippingSettingsSchema>;
+
+export function toShippingSettingsInput(values: ShippingSettingsFormValues): ShippingSettings {
+  return {
+    originPostalCode: values.originPostalCode.trim(),
+    handlingDays: Number(values.handlingDays),
+    fallbackPacPrice: toMoney(values.fallbackPacPrice),
+    fallbackSedexPrice: toMoney(values.fallbackSedexPrice),
+    boxWeightGrams: Number(values.boxWeightGrams),
+    boxHeightCm: toMoney(values.boxHeightCm),
+    boxWidthCm: toMoney(values.boxWidthCm),
+    boxLengthCm: toMoney(values.boxLengthCm),
+  };
 }
 
 /** ProblemDetails manda "input.Name" ou "sku"; os formulários usam "name" e "sku". */

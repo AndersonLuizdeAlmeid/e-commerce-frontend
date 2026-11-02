@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { cartErrorMessage, useCart } from "@/features/cart/CartProvider";
+import { ShippingSimulator } from "@/features/shipping/components/ShippingSimulator";
 import { formatPrice } from "@/shared/lib/format";
 import { WARRANTY_TEXT, absoluteUrl, whatsappUrl } from "@/shared/lib/site";
 import { ChatIcon, FlipIcon } from "@/shared/ui/icons";
@@ -294,6 +295,14 @@ export function ProductPurchase({ product, initialColorSlug, initialSizeName }: 
             </p>
           )}
           {addError && <p role="alert" className="font-medium">{addError}</p>}
+        </div>
+
+        <div className="mt-10 max-w-md">
+          <ShippingSimulator
+            id="produto"
+            items={variant ? [{ variantId: variant.id, quantity: 1 }] : null}
+            pendingHint={needsSize ? `Escolha o ${labels.size.toLowerCase()} para calcular.` : undefined}
+          />
         </div>
 
         <div className="mt-10">
