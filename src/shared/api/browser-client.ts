@@ -4,13 +4,15 @@ import { ApiError, readProblem } from "./client";
 interface BrowserRequestOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
+  /** Multipart (upload de foto): o navegador define o Content-Type com o boundary. */
+  form?: FormData;
   /** Envia o access token; em 401 renova uma vez (single-flight) e repete (arquivo 16 §5). */
   auth?: boolean;
 }
 
 /** Chamada do navegador para a API (áreas logadas — ADR-F03). Lança ApiError em respostas não-2xx. */
 export async function apiRequest<T = void>(path: string, options: BrowserRequestOptions = {}): Promise<T> {
-  const { method = "GET", body, auth = false } = options;
+  const { method = "GET", body, form, auth = false } = options;
 
   if (auth && !getAccessToken() && hasSessionHint()) {
     await refreshSession();
@@ -25,7 +27,7 @@ export async function apiRequest<T = void>(path: string, options: BrowserRequest
         ...(body === undefined ? {} : { "Content-Type": "application/json" }),
         ...(auth && getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {}),
       },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: form ?? (body === undefined ? undefined : JSON.stringify(body)),
     });
 
   let response = await send();

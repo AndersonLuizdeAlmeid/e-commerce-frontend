@@ -81,9 +81,9 @@ export function RegisterForm() {
       />
       <TextField label="Confirme a senha" name="confirmPassword" type="password" autoComplete="new-password" required error={errors.confirmPassword} />
       <SubmitButton pending={pending}>Criar conta</SubmitButton>
-      <p className="text-center text-sm text-muted">
+      <p className="text-center text-sm text-tinta-suave">
         Já tem conta?{" "}
-        <Link href="/login" className="font-medium text-brand hover:underline">
+        <Link href="/login" className="font-medium underline">
           Entrar
         </Link>
       </p>

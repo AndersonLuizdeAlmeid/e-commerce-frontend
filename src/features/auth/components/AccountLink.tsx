@@ -1,19 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { UserIcon } from "@/shared/ui/icons";
 import { useAuth } from "../AuthProvider";
 
-/** Link do cabeçalho: "Entrar" para visitante, "Minha conta" para quem está logado. */
+/** Link do cabeçalho: "Entrar" para visitante, "Minha conta" para cliente, "Painel" para admin. */
 export function AccountLink() {
-  const { status } = useAuth();
+  const { status, user } = useAuth();
   const authenticated = status === "authenticated";
+  const isAdmin = user?.role === "Admin";
+  const href = isAdmin ? "/admin" : authenticated ? "/conta" : "/login";
+  const label = isAdmin ? "Painel" : authenticated ? "Minha conta" : "Entrar";
 
   return (
     <Link
-      href={authenticated ? "/conta" : "/login"}
-      className="whitespace-nowrap rounded-md px-2 py-2 text-sm font-medium text-ink hover:text-brand focus-visible:outline-2 focus-visible:outline-brand"
+      href={href}
+      className="inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap px-1 text-sm font-medium hover:underline"
     >
-      {authenticated ? "Minha conta" : "Entrar"}
+      <UserIcon />
+      <span className="max-sm:sr-only">{label}</span>
     </Link>
   );
 }

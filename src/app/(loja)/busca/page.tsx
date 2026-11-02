@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getCatalogFilters, getProducts } from "@/features/catalog/api";
 import { ListingFilters } from "@/features/catalog/components/ListingFilters";
+import { ListingLayout } from "@/features/catalog/components/ListingLayout";
 import { Pagination } from "@/features/catalog/components/Pagination";
 import { ProductGrid } from "@/features/catalog/components/ProductGrid";
 import { parseListingParams, toProductListQuery, type SearchParams } from "@/features/catalog/listing-params";
@@ -25,9 +26,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   if (!term) {
     return (
-      <section>
-        <h1 className="text-3xl font-semibold tracking-tight">Buscar produtos</h1>
-        <div className="mt-6">
+      <section className="mx-auto w-full max-w-xl px-4 py-16">
+        <h1 className="font-display text-4xl leading-tight">Buscar peças</h1>
+        <div className="mt-8">
           <SearchForm />
         </div>
       </section>
@@ -41,21 +42,26 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   ]);
 
   return (
-    <section>
-      <h1 className="text-3xl font-semibold tracking-tight">Resultados para “{term}”</h1>
-      <p className="mt-2 text-sm text-muted">
-        {products.totalItems === 1 ? "1 produto encontrado" : `${products.totalItems} produtos encontrados`}
-      </p>
-
-      <div className="mt-10 grid gap-10 lg:grid-cols-[16rem_1fr]">
-        <aside aria-label="Filtros">
-          <ListingFilters action="/busca" filters={filters} state={state} hidden={{ q: term }} />
-        </aside>
-        <div>
-          <ProductGrid products={products.items} emptyMessage="Nenhum produto encontrado. Tente outro termo." />
-          <Pagination basePath="/busca" state={state} totalPages={products.totalPages} extra={{ q: term }} />
-        </div>
-      </div>
-    </section>
+    <ListingLayout
+      heading={
+        <h1 className="font-display text-4xl leading-[1.05] tracking-[-0.02em] text-balance sm:text-5xl">
+          Resultados para “{term}”
+        </h1>
+      }
+      intro={
+        <p className="numeros mt-3 text-sm text-vitrine-texto">
+          {products.totalItems === 1 ? "1 peça encontrada" : `${products.totalItems} peças encontradas`}
+        </p>
+      }
+      filters={(idPrefix) => <ListingFilters action="/busca" filters={filters} state={state} hidden={{ q: term }} idPrefix={idPrefix} />}
+    >
+      <ProductGrid
+        besideFilters
+        products={products.items}
+        emptyMessage="Nenhuma peça encontrada para essa busca."
+        emptyAction={{ href: "/", label: "Ver as novidades" }}
+      />
+      <Pagination basePath="/busca" state={state} totalPages={products.totalPages} extra={{ q: term }} />
+    </ListingLayout>
   );
 }

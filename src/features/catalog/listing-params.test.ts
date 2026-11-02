@@ -66,3 +66,26 @@ describe("parâmetros da listagem", () => {
     expect(visiblePages(6, 12)).toEqual([1, null, 4, 5, 6, 7, 8, null, 12]);
   });
 });
+
+describe("categoria na coleção (RF-024)", () => {
+  it("lê, conta como refinamento e volta para a URL", () => {
+    const state = parseListingParams({ categoria: "aneis" });
+
+    expect(state.category).toBe("aneis");
+    expect(hasRefinements(state)).toBe(true);
+    expect(buildListingHref("/colecao/eles", state)).toBe("/colecao/eles?categoria=aneis");
+  });
+
+  it("vazio é o mesmo que todas: o formulário manda categoria= na opção Todas", () => {
+    const state = parseListingParams({ categoria: "" });
+
+    expect(state.category).toBeUndefined();
+    expect(hasRefinements(state)).toBe(false);
+  });
+
+  it("vai para a API junto com a coleção", () => {
+    const state = parseListingParams({ categoria: "aneis" });
+
+    expect(toProductListQuery(state, { collection: "eles", category: state.category })).toMatchObject({ collection: "eles", category: "aneis" });
+  });
+});

@@ -28,6 +28,7 @@ export function shirtFixture(): ProductDetails {
       { url: "https://img.teste/preto.png", alt: "Camiseta preta", colorId: "preto" },
       { url: "https://img.teste/etiqueta.png", alt: "Etiqueta", colorId: null },
     ],
+    variantLabels: { color: "Cor", size: "Tamanho" },
     updatedAt: "2026-10-01T12:00:00Z",
   };
 }

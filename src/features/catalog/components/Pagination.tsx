@@ -8,22 +8,23 @@ interface PaginationProps {
   extra?: Record<string, string | undefined>;
 }
 
-/** Links rastreáveis `?pagina=N` (SEO-11) — sem JavaScript. */
+const item = "numeros flex min-h-11 min-w-11 items-center justify-center px-3 text-sm";
+
+/** Links rastreáveis `?pagina=N` (SEO-11) — sem JavaScript. Fica na vitrine; a página atual leva a folha. */
 export function Pagination({ basePath, state, totalPages, extra }: PaginationProps) {
   if (totalPages <= 1) {
     return null;
   }
 
   const pages = visiblePages(state.page, totalPages);
-  const linkClass = "flex h-10 min-w-10 items-center justify-center rounded-md border px-3 text-sm";
 
   return (
-    <nav aria-label="Paginação" className="mt-10 flex flex-wrap items-center justify-center gap-2">
+    <nav aria-label="Paginação" className="mt-12 flex flex-wrap items-center justify-center gap-1.5">
       {state.page > 1 && (
         <Link
           href={buildListingHref(basePath, state, { page: state.page - 1 }, extra)}
           rel="prev"
-          className={`${linkClass} border-line bg-white hover:border-brand`}
+          className={`${item} underline hover:text-vitrine-texto`}
         >
           Anterior
         </Link>
@@ -31,18 +32,18 @@ export function Pagination({ basePath, state, totalPages, extra }: PaginationPro
 
       {pages.map((page, index) =>
         page === null ? (
-          <span key={`gap-${index}`} aria-hidden="true" className="px-1 text-muted">
+          <span key={`gap-${index}`} aria-hidden="true" className="px-1 text-vitrine-texto">
             …
           </span>
         ) : page === state.page ? (
-          <span key={page} aria-current="page" className={`${linkClass} border-brand bg-brand font-medium text-white`}>
+          <span key={page} aria-current="page" className={`${item} bg-folha-vitrine font-medium text-cartela`}>
             {page}
           </span>
         ) : (
           <Link
             key={page}
             href={buildListingHref(basePath, state, { page }, extra)}
-            className={`${linkClass} border-line bg-white hover:border-brand`}
+            className={`${item} bg-cartela text-tinta transition-colors hover:bg-linha`}
           >
             <span className="sr-only">Página </span>
             {page}
@@ -54,7 +55,7 @@ export function Pagination({ basePath, state, totalPages, extra }: PaginationPro
         <Link
           href={buildListingHref(basePath, state, { page: state.page + 1 }, extra)}
           rel="next"
-          className={`${linkClass} border-line bg-white hover:border-brand`}
+          className={`${item} underline hover:text-vitrine-texto`}
         >
           Próxima
         </Link>

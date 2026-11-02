@@ -1,21 +1,62 @@
-import type { ProductSummary } from "../api";
-import { ProductCard } from "./ProductCard";
+import type { CardTheme, ProductSummary } from "../api";
+import { Cartela, CartelaVazia } from "./Cartela";
 
 /** As primeiras imagens carregam com prioridade: costumam ser o LCP da página (SEO-08). */
 const PRIORITY_IMAGES = 4;
 
-export function ProductGrid({ products, emptyMessage }: { products: ProductSummary[]; emptyMessage: string }) {
+interface ProductGridProps {
+  products: ProductSummary[];
+  emptyMessage: string;
+  emptyAction?: { href: string; label: string };
+  /** A primeira peça vira a cartela grande da vez (home). */
+  highlightFirst?: boolean;
+  /** Ao lado da coluna de filtros a grade fica com 3 colunas no desktop, para a peça não encolher. */
+  besideFilters?: boolean;
+  /** Fileira única de 4 na home: reflui em 2 e 4 colunas, sem cartela sobrando (specs/26 §2.4). */
+  fileiraDeQuatro?: boolean;
+  tema?: CardTheme;
+  tituloComo?: "h2" | "h3";
+  /** Slug do acabamento da primeira cartela, a peça em destaque (RF-025). */
+  corDaPrimeira?: string;
+}
+
+/** A vitrine: cartelas em fileiras que refluem sempre em cartelas inteiras (specs/26 §2.4). */
+export function ProductGrid({
+  products,
+  emptyMessage,
+  emptyAction,
+  highlightFirst = false,
+  besideFilters = false,
+  fileiraDeQuatro = false,
+  tema,
+  tituloComo,
+  corDaPrimeira,
+}: ProductGridProps) {
   if (products.length === 0) {
-    return <p className="rounded-lg border border-dashed border-line p-6 text-muted">{emptyMessage}</p>;
+    return <CartelaVazia message={emptyMessage} action={emptyAction} />;
   }
 
   return (
-    <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-      {products.map((product, index) => (
-        <li key={product.id}>
-          <ProductCard product={product} priority={index < PRIORITY_IMAGES} />
-        </li>
-      ))}
+    <ul
+      className={`grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:gap-y-10 ${
+        fileiraDeQuatro ? "lg:grid-cols-4" : `sm:grid-cols-3 ${besideFilters ? "" : "lg:grid-cols-4"}`
+      }`}
+    >
+      {products.map((product, index) => {
+        const highlighted = highlightFirst && index === 0;
+        return (
+          <li key={product.id} className={highlighted ? "col-span-2" : undefined}>
+            <Cartela
+              product={product}
+              priority={!fileiraDeQuatro && index < PRIORITY_IMAGES}
+              destaque={highlighted}
+              tema={tema}
+              tituloComo={tituloComo}
+              cor={index === 0 ? corDaPrimeira : undefined}
+            />
+          </li>
+        );
+      })}
     </ul>
   );
 }

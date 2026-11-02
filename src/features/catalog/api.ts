@@ -14,6 +14,12 @@ export type Color = Schemas["ColorResponse"];
 export type Size = Schemas["SizeResponse"];
 export type CatalogFilters = Schemas["CatalogFiltersResponse"];
 export type Sitemap = Schemas["SitemapResponse"];
+export type CollectionSummary = Schemas["CollectionSummaryResponse"];
+export type CollectionDetails = Schemas["CollectionDetailsResponse"];
+export type Showcase = Schemas["ShowcaseResponse"];
+
+/** Tema das cartelas da coleção (specs/26 §2.2): "Graphite" é o grafite com folha prateada. */
+export type CardTheme = "Ivory" | "Graphite";
 
 // TTLs alinhados ao HybridCache da API (specs/12-cache.md §3); a revalidação sob demanda vem com o admin.
 const CATEGORIES_REVALIDATE_SECONDS = 300;
@@ -21,6 +27,7 @@ const PRODUCT_LIST_REVALIDATE_SECONDS = 120;
 const PRODUCT_REVALIDATE_SECONDS = 600;
 const FILTERS_REVALIDATE_SECONDS = 600;
 const SITEMAP_REVALIDATE_SECONDS = 3600;
+const SHOWCASE_REVALIDATE_SECONDS = 300;
 
 export function getCategories(): Promise<CategorySummary[]> {
   return serverGet<CategorySummary[]>("/api/v1/catalog/categories", {
@@ -37,17 +44,68 @@ export async function getCategoryBySlug(slug: string): Promise<CategoryDetails |
       tags: ["categories", `category:${slug}`],
     });
   } catch (error) {
-    if (error instanceof ApiError && error.status === 404) {
+    // 301: a página descobre o slug novo em findMovedCategorySlug.
+    if (error instanceof ApiError && (error.status === 404 || error.status === 301 || error.status === 308)) {
       return null;
     }
     throw error;
   }
 }
 
+/** RN-025: slug atual de uma categoria que mudou de endereço; null quando a categoria não existe mesmo. */
+export async function findMovedCategorySlug(slug: string): Promise<string | null> {
+  const response = await serverFetch(`/api/v1/catalog/categories/${encodeURIComponent(slug)}`, {
+    revalidate: CATEGORIES_REVALIDATE_SECONDS,
+    tags: ["categories", `category:${slug}`],
+  });
+  return response.status === 301 || response.status === 308 ? slugFromLocation(response.headers.get("location")) : null;
+}
+
+export function getCollections(): Promise<CollectionSummary[]> {
+  return serverGet<CollectionSummary[]>("/api/v1/catalog/collections", {
+    revalidate: CATEGORIES_REVALIDATE_SECONDS,
+    tags: ["collections"],
+  });
+}
+
+/** Retorna null quando a coleção não existe ou está inativa (RF-024 CA2: a página responde 404). */
+export async function getCollectionBySlug(slug: string): Promise<CollectionDetails | null> {
+  try {
+    return await serverGet<CollectionDetails>(`/api/v1/catalog/collections/${encodeURIComponent(slug)}`, {
+      revalidate: CATEGORIES_REVALIDATE_SECONDS,
+      tags: ["collections", `collection:${slug}`],
+    });
+  } catch (error) {
+    // 301: a página descobre o slug novo em findMovedCollectionSlug.
+    if (error instanceof ApiError && (error.status === 404 || error.status === 301 || error.status === 308)) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+/** RF-024 CA4: slug atual de uma coleção que mudou de endereço; null quando ela não existe mesmo. */
+export async function findMovedCollectionSlug(slug: string): Promise<string | null> {
+  const response = await serverFetch(`/api/v1/catalog/collections/${encodeURIComponent(slug)}`, {
+    revalidate: CATEGORIES_REVALIDATE_SECONDS,
+    tags: ["collections", `collection:${slug}`],
+  });
+  return response.status === 301 || response.status === 308 ? slugFromLocation(response.headers.get("location")) : null;
+}
+
+/** RF-025: peça em destaque e ocasião vigente. Revalidada pelo admin; o TTL faz a ocasião virar sozinha no dia certo. */
+export function getShowcase(): Promise<Showcase> {
+  return serverGet<Showcase>("/api/v1/catalog/showcase", {
+    revalidate: SHOWCASE_REVALIDATE_SECONDS,
+    tags: ["showcase", "products", "categories"],
+  });
+}
+
 export interface ProductListQuery {
   page?: number;
   pageSize?: number;
   category?: string;
+  collection?: string;
   search?: string;
   colors?: readonly string[];
   sizes?: readonly string[];
@@ -61,6 +119,7 @@ export function getProducts(query: ProductListQuery): Promise<ProductPage> {
     page: query.page,
     pageSize: query.pageSize,
     category: query.category,
+    collection: query.collection,
     search: query.search,
     colors: query.colors,
     sizes: query.sizes,
@@ -122,8 +181,8 @@ export function slugFromLocation(location: string | null): string | null {
   return last ? decodeURIComponent(last) : null;
 }
 
-export function getCatalogFilters(category?: string): Promise<CatalogFilters> {
-  return serverGet<CatalogFilters>(`/api/v1/catalog/filters${toQueryString({ category })}`, {
+export function getCatalogFilters(category?: string, collection?: string): Promise<CatalogFilters> {
+  return serverGet<CatalogFilters>(`/api/v1/catalog/filters${toQueryString({ category, collection })}`, {
     revalidate: FILTERS_REVALIDATE_SECONDS,
     tags: ["products"],
   });
@@ -132,6 +191,6 @@ export function getCatalogFilters(category?: string): Promise<CatalogFilters> {
 export function getSitemap(): Promise<Sitemap> {
   return serverGet<Sitemap>("/api/v1/catalog/sitemap", {
     revalidate: SITEMAP_REVALIDATE_SECONDS,
-    tags: ["products", "categories"],
+    tags: ["products", "categories", "collections"],
   });
 }

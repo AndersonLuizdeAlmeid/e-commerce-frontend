@@ -20,6 +20,8 @@ export const LISTING_PAGE_SIZE = 24;
 
 export interface ListingState {
   page: number;
+  /** Só na página de coleção, que atravessa categorias (RF-024). */
+  category?: string;
   colors: string[];
   sizes: string[];
   minPrice?: number;
@@ -53,6 +55,7 @@ export function parseListingParams(params: SearchParams): ListingState {
 
   return {
     page: Number.isInteger(page) && page >= 1 ? page : 1,
+    category: first(params.categoria),
     colors: [...new Set(all(params.cor))],
     sizes: [...new Set(all(params.tamanho))],
     minPrice: parsePrice(first(params.preco_min)),
@@ -61,7 +64,7 @@ export function parseListingParams(params: SearchParams): ListingState {
   };
 }
 
-export function toProductListQuery(state: ListingState, extra: Pick<ProductListQuery, "category" | "search"> = {}): ProductListQuery {
+export function toProductListQuery(state: ListingState, extra: Pick<ProductListQuery, "category" | "collection" | "search"> = {}): ProductListQuery {
   return {
     ...extra,
     page: state.page,
@@ -77,6 +80,7 @@ export function toProductListQuery(state: ListingState, extra: Pick<ProductListQ
 /** Filtros ou ordenação aplicados: a página vira `noindex,follow` (SEO-04). */
 export function hasRefinements(state: ListingState): boolean {
   return (
+    state.category !== undefined ||
     state.colors.length > 0 ||
     state.sizes.length > 0 ||
     state.minPrice !== undefined ||
@@ -99,6 +103,9 @@ export function buildListingHref(
     if (value) {
       search.append(key, value);
     }
+  }
+  if (next.category) {
+    search.append("categoria", next.category);
   }
   next.colors.forEach((color) => search.append("cor", color));
   next.sizes.forEach((size) => search.append("tamanho", size));
