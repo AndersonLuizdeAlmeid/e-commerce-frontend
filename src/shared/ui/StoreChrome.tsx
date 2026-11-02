@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { AccountLink } from "@/features/auth/components/AccountLink";
+import { CartProvider } from "@/features/cart/CartProvider";
+import { SacolaLink } from "@/features/cart/components/SacolaLink";
 import { getCategories, getCollections } from "@/features/catalog/api";
 import { CategoryNav } from "@/features/catalog/components/CategoryNav";
 import { INSTAGRAM_URL, SITE_SLOGAN, WARRANTY_TEXT, whatsappUrl } from "@/shared/lib/site";
@@ -13,7 +15,7 @@ export async function StoreChrome({ children }: { children: React.ReactNode }) {
   const [categories, collections] = await Promise.all([getCategories(), getCollections()]);
 
   return (
-    <>
+    <CartProvider>
       <header className="border-b border-linha">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2">
           <Monograma />
@@ -25,6 +27,7 @@ export async function StoreChrome({ children }: { children: React.ReactNode }) {
               <SearchIcon />
             </Link>
             <AccountLink />
+            <SacolaLink />
           </div>
         </div>
       </header>
@@ -53,6 +56,6 @@ export async function StoreChrome({ children }: { children: React.ReactNode }) {
         </div>
       </footer>
       <FalarComAMO />
-    </>
+    </CartProvider>
   );
 }

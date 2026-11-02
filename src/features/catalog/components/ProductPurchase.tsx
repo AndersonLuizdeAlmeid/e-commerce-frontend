@@ -1,8 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
+import { cartErrorMessage, useCart } from "@/features/cart/CartProvider";
+import { ShippingSimulator } from "@/features/shipping/components/ShippingSimulator";
 import { formatPrice } from "@/shared/lib/format";
 import { WARRANTY_TEXT, absoluteUrl, whatsappUrl } from "@/shared/lib/site";
 import { ChatIcon, FlipIcon } from "@/shared/ui/icons";
@@ -26,6 +29,9 @@ interface ProductPurchaseProps {
   initialSizeName?: string | null;
 }
 
+const addButton =
+  "min-h-12 bg-tinta px-6 pt-0.5 text-sm font-medium uppercase tracking-[0.18em] text-cartela transition-colors hover:bg-grafite disabled:opacity-60 disabled:hover:bg-tinta";
+
 /** Opção marcada na vitrine: cartela clara com o aro de folha (specs/26 §2.2, regra 2). */
 const marcada =
   "has-[:checked]:bg-cartela has-[:checked]:text-tinta has-[:checked]:shadow-[0_0_0_2px_var(--color-vitrine),0_0_0_4px_var(--color-folha-vitrine)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-4 has-[:focus-visible]:outline-vitrine-tinta";
@@ -43,6 +49,11 @@ export function ProductPurchase({ product, initialColorSlug, initialSizeName }: 
   const [flipped, setFlipped] = useState(false);
   const backButton = useRef<HTMLButtonElement>(null);
   const frontButton = useRef<HTMLButtonElement>(null);
+  const sizeSelector = useRef<HTMLFieldSetElement>(null);
+  const { add } = useCart();
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   const labels = resolveVariantLabels(product);
   const images = imagesForColor(product, selection.colorId);
@@ -52,7 +63,34 @@ export function ProductPurchase({ product, initialColorSlug, initialSizeName }: 
   const selectedColor = product.colors.find((color) => color.id === selection.colorId);
   const price = variant ? formatPrice(variant.price) : null;
 
+  const canAdd = !adding && (needsSize || variant?.available === true);
+  const addLabel = needsSize ? `Escolha o ${labels.size.toLowerCase()}` : variant?.available ? "Adicionar à sacola" : "Esgotado";
+
+  async function addToBag() {
+    setAdded(false);
+    setAddError(null);
+    if (needsSize) {
+      // Sem erro vermelho: a escolha que falta é só levar o foco até ela (specs/26 §4.3).
+      sizeSelector.current?.querySelector<HTMLInputElement>("input:not(:disabled)")?.focus();
+      return;
+    }
+    if (!variant) {
+      return;
+    }
+    setAdding(true);
+    try {
+      await add(variant.id);
+      setAdded(true);
+    } catch (error) {
+      setAddError(cartErrorMessage(error));
+    } finally {
+      setAdding(false);
+    }
+  }
+
   function update(next: Selection) {
+    setAdded(false);
+    setAddError(null);
     setSelection(next);
     window.history.replaceState(window.history.state, "", `${window.location.pathname}${selectionSearch(product, next)}`);
   }
@@ -204,7 +242,7 @@ export function ProductPurchase({ product, initialColorSlug, initialSizeName }: 
         )}
 
         {product.sizes.length > 0 && (
-          <fieldset className="mt-8">
+          <fieldset ref={sizeSelector} className="mt-8">
             <legend className="text-xs font-medium uppercase tracking-[0.16em]">{labels.size}</legend>
             <div className="mt-4 flex flex-wrap gap-3">
               {product.sizes.map((size) => {
@@ -247,25 +285,38 @@ export function ProductPurchase({ product, initialColorSlug, initialSizeName }: 
           )}
         </p>
 
-        <button
-          type="button"
-          disabled
-          className="mt-4 min-h-12 w-full bg-cartela px-6 text-sm font-medium uppercase tracking-[0.18em] text-tinta opacity-60 sm:w-auto"
-        >
-          Adicionar à sacola
+        <button type="button" onClick={() => void addToBag()} disabled={!canAdd} aria-busy={adding} className={`mt-4 w-full sm:w-auto ${addButton}`}>
+          {addLabel}
         </button>
-        <p className="mt-2 text-xs text-vitrine-texto">A compra online chega na próxima etapa da loja.</p>
+        <div aria-live="polite" className="mt-2 text-sm empty:hidden">
+          {added && (
+            <p>
+              Peça na sacola. <Link href="/carrinho" className="inline-flex min-h-11 items-center font-medium underline">Ver sacola</Link>
+            </p>
+          )}
+          {addError && <p role="alert" className="font-medium">{addError}</p>}
+        </div>
 
-        <div className="mt-10 hidden lg:block">
+        <div className="mt-10 max-w-md">
+          <ShippingSimulator
+            id="produto"
+            items={variant ? [{ variantId: variant.id, quantity: 1 }] : null}
+            pendingHint={needsSize ? `Escolha o ${labels.size.toLowerCase()} para calcular.` : undefined}
+          />
+        </div>
+
+        <div className="mt-10">
           <WhatsappLink message={whatsappMessage} />
         </div>
       </div>
 
-      {/* Barra do polegar no celular: preço e atendimento sempre à mão (specs/26 §4.3). */}
+      {/* Barra do polegar no celular: preço e a compra sempre à mão (specs/26 §4.3). */}
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-vitrine-tinta/15 bg-vitrine-funda px-4 py-3 lg:hidden">
         <div className="flex items-center justify-between gap-4">
-          <p className="numeros text-lg">{price ?? formatPrice(product.priceFrom)}</p>
-          <WhatsappLink message={whatsappMessage} />
+          <p className="numeros shrink-0 text-lg">{price ?? formatPrice(product.priceFrom)}</p>
+          <button type="button" onClick={() => void addToBag()} disabled={!canAdd} aria-busy={adding} className={`min-w-0 ${addButton}`}>
+            {addLabel}
+          </button>
         </div>
       </div>
     </div>

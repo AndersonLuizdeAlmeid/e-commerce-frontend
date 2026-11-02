@@ -460,6 +460,76 @@ function adminProductDetails(product) {
   };
 }
 
+const stockMovements = [];
+let shippingSettings = null;
+const shippingRules = [];
+
+function stockRows() {
+  return admin.products.flatMap((product) =>
+    product.variants.map((variant) => ({
+      variantId: variant.id,
+      productId: product.id,
+      productName: product.name,
+      imageUrl: product.images[0]?.url ?? null,
+      colorName: admin.colors.find((color) => color.id === variant.colorId)?.name ?? null,
+      sizeName: admin.sizes.find((size) => size.id === variant.sizeId)?.name ?? null,
+      sku: variant.sku,
+      barcode: variant.barcode,
+      quantityOnHand: variant.quantityOnHand,
+      lowStockThreshold: 3,
+      isActive: product.isActive && variant.isActive,
+    })),
+  );
+}
+
+const pageOf = (items, page, pageSize) => ({
+  items: items.slice((page - 1) * pageSize, page * pageSize),
+  page,
+  pageSize,
+  totalItems: items.length,
+  totalPages: Math.ceil(items.length / pageSize),
+});
+
+function applyStockMovement(variant, type, delta, reason) {
+  variant.quantityOnHand += delta;
+  stockMovements.unshift({
+    id: newId(),
+    variantId: variant.id,
+    type,
+    quantity: delta,
+    reason,
+    performedBy: session.user.email,
+    createdAt: new Date().toISOString(),
+  });
+}
+
+function stockRoute(method, id, sub, query, body) {
+  const page = Number(query.get("page") ?? 1);
+  if (id === "scan") {
+    const variant = allVariants().find((item) => item.barcode === body.barcode);
+    if (!variant) return problem(404, "Nenhuma variação tem este código de barras.", "Catalog.BarcodeNotFound");
+    applyStockMovement(variant, "In", body.quantity ?? 1, "Entrada por leitura");
+    const row = stockRows().find((item) => item.variantId === variant.id);
+    return { status: 200, body: row };
+  }
+  if (!id) {
+    const search = query.get("search")?.toLowerCase();
+    const rows = stockRows()
+      .filter((row) => query.get("lowStock") !== "true" || (row.isActive && row.quantityOnHand <= row.lowStockThreshold))
+      .filter((row) => !search || row.productName.toLowerCase().includes(search) || row.sku.toLowerCase().includes(search) || row.barcode === search);
+    return { status: 200, body: pageOf(rows, page, Number(query.get("pageSize") ?? 30)) };
+  }
+  const variant = allVariants().find((item) => item.id === id);
+  if (!variant) return problem(404, "Variação não encontrada.");
+  if (method === "GET") {
+    return { status: 200, body: pageOf(stockMovements.filter((item) => item.variantId === id), page, Number(query.get("pageSize") ?? 20)) };
+  }
+  const delta = body.type === "In" ? body.quantity : body.type === "Out" ? -body.quantity : body.quantity - variant.quantityOnHand;
+  if (variant.quantityOnHand + delta < 0) return problem(422, "Estoque insuficiente: o saldo não pode ficar negativo.", "Inventory.InsufficientStock");
+  if (delta !== 0) applyStockMovement(variant, body.type, delta, body.reason);
+  return { status: 200, body: { variantId: id, quantityOnHand: variant.quantityOnHand } };
+}
+
 function adminRoute(method, path, query, body) {
   const parts = path.replace("/api/v1/admin/", "").split("/");
   const [resource, id, sub, subId, action] = parts;
@@ -521,6 +591,28 @@ function adminRoute(method, path, query, body) {
     if (!product) return problem(404, "Nenhuma variação tem este código de barras.", "Catalog.BarcodeNotFound");
     const variant = product.variants.find((item) => item.barcode === code);
     return { status: 200, body: { variantId: variant.id, productId: product.id, productName: product.name, sku: variant.sku, barcode: code } };
+  }
+
+  if (resource === "stock") return stockRoute(method, id, sub, query, body);
+  if (resource === "shipping" && id === "rules") {
+    if (method === "GET") return { status: 200, body: shippingRules };
+    if (method === "POST") {
+      const rule = { id: newId(), ...body };
+      shippingRules.push(rule);
+      return { status: 201, body: { id: rule.id } };
+    }
+    const index = shippingRules.findIndex((rule) => rule.id === sub);
+    if (index < 0) return problem(404, "Regra de frete não encontrada.");
+    if (method === "PUT") shippingRules[index] = { id: sub, ...body };
+    else shippingRules.splice(index, 1);
+    return noContent;
+  }
+  if (resource === "shipping") {
+    if (method === "PUT") {
+      shippingSettings = body;
+      return noContent;
+    }
+    return shippingSettings ? { status: 200, body: shippingSettings } : noContent;
   }
 
   if (resource !== "products") return undefined;
@@ -698,7 +790,41 @@ function parseUpload(buffer, contentType) {
   return { ...fields, fileName, isImage };
 }
 
+function cartLookup(lines) {
+  const items = lines.flatMap(({ variantId, quantity }) => {
+    const found = products.find(({ details }) => details.variants.some((variant) => variant.id === variantId));
+    if (!found) return [];
+    const variant = found.details.variants.find((item) => item.id === variantId);
+    return [{
+      variantId,
+      productId: found.summary.id,
+      productName: found.summary.name,
+      productSlug: found.summary.slug,
+      colorName: found.details.colors.find((color) => color.id === variant.colorId)?.name ?? null,
+      sizeName: found.details.sizes.find((size) => size.id === variant.sizeId)?.name ?? null,
+      variantLabels: { color: "Acabamento", size: "Tamanho" },
+      imageUrl: found.details.images[0]?.url ?? null,
+      imageAlt: found.details.images[0]?.alt ?? null,
+      unitPrice: variant.price,
+      quantity,
+      lineTotal: variant.price * quantity,
+      status: variant.available ? "Available" : "OutOfStock",
+      availableQuantity: null,
+    }];
+  });
+  return { items, subtotal: items.filter((item) => item.status === "Available").reduce((total, item) => total + item.lineTotal, 0) };
+}
+
 function browserRoute(method, path, query, body) {
+  if (path === "/api/v1/catalog/variants/lookup") return { status: 200, body: cartLookup(body.items) };
+  if (path === "/api/v1/shipping/quotes") {
+    if (String(body.postalCode).replace(/\D/g, "").length !== 8) return problem(400, "CEP inválido: informe os 8 números.", "Shipping.InvalidPostalCode");
+    const options = [
+      { serviceCode: "PAC", name: "PAC", price: 21.4, originalPrice: 21.4, deliveryDays: 8, appliedRules: [] },
+      { serviceCode: "SEDEX", name: "SEDEX", price: 38.9, originalPrice: 38.9, deliveryDays: 4, appliedRules: [] },
+    ];
+    return { status: 200, body: { options, isFallback: false, freeShippingRemaining: null } };
+  }
   if (path === "/api/v1/auth/login" || path === "/api/v1/auth/refresh") return { status: 200, body: session };
   if (path === "/api/v1/auth/logout") return noContent;
   if (path === "/api/v1/auth/me") return { status: 200, body: session.user };

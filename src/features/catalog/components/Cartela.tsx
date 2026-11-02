@@ -101,11 +101,8 @@ export function Cartela({ product, priority = false, destaque = false, tema = "I
             </ul>
           )}
 
-          {destaque && (
-            <span className="mt-4 inline-flex min-h-11 items-center self-start bg-tinta px-6 pt-0.5 text-sm font-medium uppercase tracking-[0.18em] text-cartela transition-colors group-hover:bg-grafite sm:mt-8">
-              Ver a peça
-            </span>
-          )}
+          {/* Lugar do "Adicionar à sacola", que fica fora do link da cartela (ProductGrid). */}
+          {destaque && <span aria-hidden="true" className="mt-4 block min-h-11 sm:mt-8" />}
         </div>
 
         <Relevo className={grafite ? "text-prata/30" : undefined} />

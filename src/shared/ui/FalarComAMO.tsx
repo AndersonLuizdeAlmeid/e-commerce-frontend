@@ -5,8 +5,8 @@ import { whatsappUrl } from "@/shared/lib/site";
 import { ChatIcon } from "./icons";
 
 /**
- * Atendimento próximo a um toque (specs/26 §2.4). Na página do produto a barra de compra já traz o
- * WhatsApp com o nome da peça, então este botão sai do caminho.
+ * Atendimento próximo a um toque (specs/26 §2.4). Na página do produto o link de WhatsApp já vai com o nome da
+ * peça, e este botão ficaria por cima da barra de compra, então sai do caminho.
  */
 export function FalarComAMO() {
   const pathname = usePathname();

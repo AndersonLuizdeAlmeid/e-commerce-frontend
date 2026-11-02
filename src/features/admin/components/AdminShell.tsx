@@ -9,10 +9,12 @@ import { StarMark } from "@/shared/ui/icons";
 
 const NAV = [
   { href: "/admin/produtos", label: "Produtos" },
+  { href: "/admin/estoque", label: "Estoque" },
   { href: "/admin/colecoes", label: "Coleções" },
   { href: "/admin/vitrine", label: "Vitrine" },
   { href: "/admin/categorias", label: "Categorias" },
   { href: "/admin/grade", label: "Acabamentos e tamanhos" },
+  { href: "/admin/frete", label: "Frete" },
 ];
 
 /**
