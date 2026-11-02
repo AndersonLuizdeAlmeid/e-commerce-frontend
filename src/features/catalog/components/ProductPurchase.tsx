@@ -2,9 +2,12 @@
 
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { formatPrice } from "@/shared/lib/format";
+import { WARRANTY_TEXT, absoluteUrl, whatsappUrl } from "@/shared/lib/site";
+import { ChatIcon, FlipIcon } from "@/shared/ui/icons";
 import type { ProductDetails } from "../api";
+import { resolveVariantLabels } from "../variant-labels";
 import {
   colorHasStock,
   findVariant,
@@ -14,6 +17,8 @@ import {
   sizeState,
   type Selection,
 } from "../variant-selection";
+import { Brilho } from "./Brilho";
+import { sombraCartela } from "./Cartela";
 
 interface ProductPurchaseProps {
   product: ProductDetails;
@@ -21,8 +26,13 @@ interface ProductPurchaseProps {
   initialSizeName?: string | null;
 }
 
+/** Opção marcada na vitrine: cartela clara com o aro de folha (specs/26 §2.2, regra 2). */
+const marcada =
+  "has-[:checked]:bg-cartela has-[:checked]:text-tinta has-[:checked]:shadow-[0_0_0_2px_var(--color-vitrine),0_0_0_4px_var(--color-folha-vitrine)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-4 has-[:focus-visible]:outline-vitrine-tinta";
+
 /**
- * Galeria por cor + seletor de cor (bolinha com o nome) + grade de tamanhos (RF-021, arquivo 16 §4 e §8).
+ * A cartela da peça na vitrine, com o brilho de folha (inclinação menor que a das cartelas da grade), a galeria
+ * do acabamento escolhido na frente e os detalhes no verso; ao lado, acabamento e tamanho com os rótulos da categoria (RF-021, specs/26 §4.3).
  * A escolha vai para a URL (`?cor=&tamanho=`) sem navegar, para o link compartilhado abrir a mesma variação.
  */
 export function ProductPurchase({ product, initialColorSlug, initialSizeName }: ProductPurchaseProps) {
@@ -30,12 +40,17 @@ export function ProductPurchase({ product, initialColorSlug, initialSizeName }: 
     initialSelection(product, initialColorSlug, initialSizeName),
   );
   const [imageIndex, setImageIndex] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const backButton = useRef<HTMLButtonElement>(null);
+  const frontButton = useRef<HTMLButtonElement>(null);
 
+  const labels = resolveVariantLabels(product);
   const images = imagesForColor(product, selection.colorId);
   const mainImage = images[Math.min(imageIndex, images.length - 1)];
   const needsSize = product.sizes.length > 0 && selection.sizeId === null;
   const variant = needsSize ? undefined : findVariant(product, selection);
   const selectedColor = product.colors.find((color) => color.id === selection.colorId);
+  const price = variant ? formatPrice(variant.price) : null;
 
   function update(next: Selection) {
     setSelection(next);
@@ -48,69 +63,123 @@ export function ProductPurchase({ product, initialColorSlug, initialSizeName }: 
     update({ colorId, sizeId: keepSize ? selection.sizeId : null });
   }
 
+  function flip(toBack: boolean) {
+    setFlipped(toBack);
+    // O foco acompanha a face visível, para teclado e leitor de tela não ficarem no lado escondido.
+    requestAnimationFrame(() => (toBack ? backButton : frontButton).current?.focus());
+  }
+
+  const whatsappMessage = `Olá! Tenho uma dúvida sobre ${product.name}${selectedColor ? ` (${selectedColor.name})` : ""}: ${absoluteUrl(`/produto/${product.slug}`)}`;
+
   return (
-    <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-      <div>
-        <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-line">
-          {mainImage && (
-            <Image
-              key={mainImage.url}
-              src={mainImage.url}
-              alt={mainImage.alt}
-              fill
-              priority
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-cover"
-            />
-          )}
+    <div className="grid gap-10 pb-24 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-14 lg:pb-0">
+      <Brilho intensidade={0.35} className="group self-start rounded-[3px]">
+        <div className="virar" data-virada={flipped}>
+          <div className="virar-miolo">
+            <div
+              className={`virar-frente cartela relative rounded-[3px] px-4 pb-5 pt-4 sm:px-6 sm:pt-6 ${sombraCartela}`}
+              inert={flipped}
+              aria-hidden={flipped}
+            >
+              <div className="relative aspect-square overflow-hidden bg-linha/50 lg:aspect-[4/5]">
+                {mainImage && (
+                  <Image
+                    key={mainImage.url}
+                    src={mainImage.url}
+                    alt={mainImage.alt}
+                    fill
+                    priority
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    className="object-cover"
+                  />
+                )}
+              </div>
+
+              {images.length > 1 && (
+                <ul className="mt-3 flex gap-2 overflow-x-auto p-1" aria-label="Fotos da peça">
+                  {images.map((image, index) => (
+                    <li key={image.url} className="shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setImageIndex(index)}
+                        aria-label={`Ver foto: ${image.alt}`}
+                        aria-current={index === imageIndex ? "true" : undefined}
+                        className={`relative block size-14 overflow-hidden ${
+                          index === imageIndex ? "shadow-[0_0_0_2px_var(--color-cartela),0_0_0_4px_var(--color-folha)]" : "opacity-80 hover:opacity-100"
+                        }`}
+                      >
+                        <Image src={image.url} alt="" fill sizes="56px" className="object-cover" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <button
+                ref={frontButton}
+                type="button"
+                onClick={() => flip(true)}
+                className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-medium uppercase tracking-[0.16em] underline-offset-4 hover:underline"
+              >
+                <FlipIcon />
+                Virar: detalhes e cuidados
+              </button>
+            </div>
+
+            <div
+              className={`virar-verso cartela rounded-[3px] px-5 py-6 sm:px-8 ${sombraCartela}`}
+              inert={!flipped}
+              aria-hidden={!flipped}
+            >
+              <h2 className="font-display text-3xl leading-tight">Detalhes</h2>
+              {product.description ? (
+                <p className="mt-4 max-w-prose whitespace-pre-line leading-relaxed">{product.description}</p>
+              ) : (
+                <p className="mt-4 text-tinta-suave">A loja ainda não escreveu os detalhes desta peça.</p>
+              )}
+              <h3 className="mt-8 text-xs font-medium uppercase tracking-[0.16em]">Garantia</h3>
+              <p className="mt-2 max-w-prose leading-relaxed">{WARRANTY_TEXT}</p>
+              <button
+                ref={backButton}
+                type="button"
+                onClick={() => flip(false)}
+                className="mt-8 inline-flex min-h-11 items-center gap-2 text-sm font-medium uppercase tracking-[0.16em] underline-offset-4 hover:underline"
+              >
+                <FlipIcon />
+                Voltar para a foto
+              </button>
+            </div>
+          </div>
         </div>
+      </Brilho>
 
-        {images.length > 1 && (
-          <ul className="mt-3 flex gap-2" aria-label="Fotos do produto">
-            {images.map((image, index) => (
-              <li key={image.url}>
-                <button
-                  type="button"
-                  onClick={() => setImageIndex(index)}
-                  aria-label={`Ver foto: ${image.alt}`}
-                  aria-current={index === imageIndex ? "true" : undefined}
-                  className={`relative block size-16 overflow-hidden rounded-md border-2 ${
-                    index === imageIndex ? "border-brand" : "border-transparent"
-                  } focus-visible:outline-2 focus-visible:outline-brand`}
-                >
-                  <Image src={image.url} alt="" fill sizes="64px" className="object-cover" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">{product.name}</h1>
-        <p className="mt-3 text-2xl font-semibold">
-          {variant ? (
-            formatPrice(variant.price)
+      <div className="lg:pt-6">
+        {/* Nome e preço fora da cartela: a foto pode crescer sem empurrar os dois para baixo da dobra. */}
+        <h1 className="font-display text-4xl leading-[1.04] tracking-[-0.02em] text-balance sm:text-5xl">{product.name}</h1>
+        {/* O preço é parte da peça: em Prata, um degrau abaixo do nome (contrato de direção, OWN-WORLD). */}
+        <p className="numeros mt-3">
+          {price ? (
+            <span className="font-display text-3xl">{price}</span>
           ) : (
             <>
-              <span className="text-base font-normal text-muted">a partir de </span>
-              {formatPrice(product.priceFrom)}
+              <span className="text-vitrine-texto">a partir de </span>
+              <span className="font-display text-3xl">{formatPrice(product.priceFrom)}</span>
             </>
           )}
         </p>
 
         {product.colors.length > 0 && (
           <fieldset className="mt-8">
-            <legend className="text-sm font-medium">
-              Cor: <span className="font-normal text-muted">{selectedColor?.name ?? "escolha uma cor"}</span>
+            <legend className="text-xs font-medium uppercase tracking-[0.16em]">
+              {labels.color}: <span className="font-display text-base normal-case tracking-normal">{selectedColor?.name ?? "escolha"}</span>
             </legend>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-3">
               {product.colors.map((color) => {
                 const soldOut = !colorHasStock(product, color.id);
                 return (
                   <label
                     key={color.id}
-                    className="flex cursor-pointer items-center gap-2 rounded-full border border-line bg-white py-1.5 pl-1.5 pr-3 text-sm has-[:checked]:border-brand has-[:checked]:ring-1 has-[:checked]:ring-brand has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand"
+                    className={`flex min-h-11 cursor-pointer items-center gap-2.5 rounded-full border border-vitrine-tinta/30 py-1.5 pl-1.5 pr-4 text-sm transition-colors hover:border-vitrine-tinta ${marcada}`}
                   >
                     <input
                       type="radio"
@@ -120,9 +189,13 @@ export function ProductPurchase({ product, initialColorSlug, initialSizeName }: 
                       onChange={() => selectColor(color.id)}
                       className="sr-only"
                     />
-                    <span aria-hidden="true" className="size-6 rounded-full border border-ink/15" style={{ backgroundColor: color.hex }} />
+                    {soldOut ? (
+                      <span aria-hidden="true" className="size-7 rounded-full border border-dashed border-current opacity-70" />
+                    ) : (
+                      <span aria-hidden="true" className="size-7 rounded-full shadow-[inset_0_0_0_1px_rgb(0_0_0/0.2)]" style={{ backgroundColor: color.hex }} />
+                    )}
                     {color.name}
-                    {soldOut && <span className="text-muted">(esgotada)</span>}
+                    {soldOut && <span className="opacity-80">esgotado</span>}
                   </label>
                 );
               })}
@@ -131,19 +204,19 @@ export function ProductPurchase({ product, initialColorSlug, initialSizeName }: 
         )}
 
         {product.sizes.length > 0 && (
-          <fieldset className="mt-6">
-            <legend className="text-sm font-medium">Tamanho</legend>
-            <div className="mt-3 flex flex-wrap gap-2">
+          <fieldset className="mt-8">
+            <legend className="text-xs font-medium uppercase tracking-[0.16em]">{labels.size}</legend>
+            <div className="mt-4 flex flex-wrap gap-3">
               {product.sizes.map((size) => {
                 const state = sizeState(product, selection.colorId, size.id);
                 return (
                   <label
                     key={size.id}
-                    className={`relative flex h-11 min-w-11 items-center justify-center rounded-md border px-3 text-sm ${
+                    className={`numeros relative flex h-11 min-w-11 items-center justify-center rounded-full border px-2 text-sm transition-colors ${
                       state === "nonexistent"
-                        ? "cursor-not-allowed border-line bg-surface text-muted/50"
-                        : "cursor-pointer border-line bg-white has-[:checked]:border-brand has-[:checked]:bg-brand has-[:checked]:text-white"
-                    } ${state === "sold-out" ? "text-muted line-through" : ""} has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand`}
+                        ? "cursor-not-allowed border-vitrine-tinta/15 opacity-40"
+                        : `cursor-pointer border-vitrine-tinta/30 hover:border-vitrine-tinta ${marcada}`
+                    } ${state === "sold-out" ? "border-dashed line-through" : ""}`}
                   >
                     <input
                       type="radio"
@@ -156,7 +229,7 @@ export function ProductPurchase({ product, initialColorSlug, initialSizeName }: 
                     />
                     {size.name}
                     {state === "sold-out" && <span className="sr-only"> (esgotado)</span>}
-                    {state === "nonexistent" && <span className="sr-only"> (indisponível nesta cor)</span>}
+                    {state === "nonexistent" && <span className="sr-only"> (indisponível neste {labels.color.toLowerCase()})</span>}
                   </label>
                 );
               })}
@@ -164,33 +237,53 @@ export function ProductPurchase({ product, initialColorSlug, initialSizeName }: 
           </fieldset>
         )}
 
-        <p className="mt-6 text-sm" aria-live="polite">
+        <p className="mt-8 text-sm" aria-live="polite">
           {needsSize ? (
-            <span className="text-muted">Escolha um tamanho.</span>
+            <span className="text-vitrine-texto">Escolha o {labels.size.toLowerCase()}.</span>
           ) : variant?.available ? (
-            <span className="font-medium text-emerald-700">Em estoque</span>
+            <span className="font-medium">Disponível</span>
           ) : (
-            <span className="font-medium text-red-700">Esgotado nesta combinação</span>
+            <span className="font-medium">Esgotado nesta combinação</span>
           )}
         </p>
 
         <button
           type="button"
           disabled
-          className="mt-4 w-full rounded-md bg-brand px-5 py-3 font-medium text-white opacity-60 sm:w-auto"
+          className="mt-4 min-h-12 w-full bg-cartela px-6 text-sm font-medium uppercase tracking-[0.18em] text-tinta opacity-60 sm:w-auto"
         >
-          Adicionar ao carrinho
+          Adicionar à sacola
         </button>
-        <p className="mt-2 text-xs text-muted">A compra online chega na próxima etapa da loja.</p>
+        <p className="mt-2 text-xs text-vitrine-texto">A compra online chega na próxima etapa da loja.</p>
 
-        {product.description && (
-          <div className="mt-10 border-t border-line pt-6">
-            <h2 className="text-sm font-medium">Descrição</h2>
-            <p className="mt-2 max-w-prose whitespace-pre-line text-muted">{product.description}</p>
-          </div>
-        )}
+        <div className="mt-10 hidden lg:block">
+          <WhatsappLink message={whatsappMessage} />
+        </div>
+      </div>
+
+      {/* Barra do polegar no celular: preço e atendimento sempre à mão (specs/26 §4.3). */}
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-vitrine-tinta/15 bg-vitrine-funda px-4 py-3 lg:hidden">
+        <div className="flex items-center justify-between gap-4">
+          <p className="numeros text-lg">{price ?? formatPrice(product.priceFrom)}</p>
+          <WhatsappLink message={whatsappMessage} />
+        </div>
       </div>
     </div>
+  );
+}
+
+function WhatsappLink({ message }: { message: string }) {
+  return (
+    <a
+      href={whatsappUrl(message)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex min-h-11 items-center gap-2 rounded-full border border-vitrine-tinta/40 px-4 text-sm font-medium transition-colors hover:border-vitrine-tinta"
+    >
+      <ChatIcon />
+      Tirar dúvida no WhatsApp
+      <span className="sr-only"> (abre em outra aba)</span>
+    </a>
   );
 }
 

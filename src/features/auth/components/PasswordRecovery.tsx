@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { errorMessage, fieldErrors } from "@/shared/api/problem";
-import { FormAlert, SubmitButton, TextField } from "@/shared/ui/form";
+import { FormAlert, SubmitButton, TextField, primaryButtonClass } from "@/shared/ui/form";
 import { confirmEmail, forgotPassword, resetPassword } from "../api";
 import { useAuth } from "../AuthProvider";
 import { validateEmail, validatePassword } from "../validation";
@@ -50,7 +50,7 @@ export function ForgotPasswordForm() {
       <TextField label="E-mail da conta" name="email" type="email" autoComplete="email" inputMode="email" required />
       <SubmitButton pending={pending}>Enviar link</SubmitButton>
       <p className="text-center text-sm">
-        <Link href="/login" className="text-brand hover:underline">
+        <Link href="/login" className="underline">
           Voltar para o login
         </Link>
       </p>
@@ -105,7 +105,7 @@ export function ResetPasswordForm() {
     return (
       <div className="space-y-5">
         <FormAlert kind="success">Senha alterada. Por segurança, as sessões abertas em outros aparelhos foram encerradas.</FormAlert>
-        <Link href="/login" className="block rounded-md bg-brand px-5 py-3 text-center font-medium text-white">
+        <Link href="/login" className={primaryButtonClass}>
           Entrar com a nova senha
         </Link>
       </div>
@@ -160,7 +160,7 @@ export function ConfirmEmailPanel() {
     return (
       <div className="space-y-5">
         <FormAlert kind="success">E-mail confirmado. Agora você pode finalizar compras.</FormAlert>
-        <Link href="/" className="block rounded-md bg-brand px-5 py-3 text-center font-medium text-white">
+        <Link href="/" className={primaryButtonClass}>
           Continuar comprando
         </Link>
       </div>
@@ -181,7 +181,7 @@ export function ConfirmEmailPanel() {
         type="button"
         onClick={confirm}
         disabled={status === "pending"}
-        className="w-full rounded-md bg-brand px-5 py-3 font-medium text-white hover:bg-brand/90 disabled:opacity-60"
+        className={primaryButtonClass}
       >
         {status === "pending" ? "Confirmando…" : "Confirmar meu e-mail"}
       </button>
@@ -193,7 +193,7 @@ function InvalidLink({ action, label }: { action: string; label: string }) {
   return (
     <div className="space-y-5">
       <FormAlert kind="error">Link inválido ou incompleto. Confira se copiou o endereço inteiro do e-mail.</FormAlert>
-      <Link href={action} className="block text-center text-sm font-medium text-brand hover:underline">
+      <Link href={action} className="block text-center text-sm font-medium underline">
         {label}
       </Link>
     </div>

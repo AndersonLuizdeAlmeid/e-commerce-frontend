@@ -36,7 +36,7 @@ export function AccountPanel() {
         }
         setLoadError(
           err instanceof ApiError && err.status === 403
-            ? "Esta é uma conta de administrador. O painel administrativo chega na próxima etapa."
+            ? "Esta é uma conta de administrador. O catálogo fica em /admin, no link “Painel” do topo."
             : errorMessage(err, "Não foi possível carregar seus dados."),
         );
       });
@@ -46,7 +46,7 @@ export function AccountPanel() {
   }, [status]);
 
   if (status !== "authenticated" || !user) {
-    return <p className="text-muted">Carregando sua conta…</p>;
+    return <p className="text-tinta-suave">Carregando sua conta…</p>;
   }
 
   return (
@@ -56,16 +56,16 @@ export function AccountPanel() {
       <EmailStatus confirmed={user.emailConfirmed} email={user.email} />
 
       <section aria-labelledby="dados">
-        <h2 id="dados" className="text-lg font-semibold">
+        <h2 id="dados" className="font-display text-2xl leading-tight">
           Meus dados
         </h2>
         <div className="mt-4">
-          {loadError ? <FormAlert kind="info">{loadError}</FormAlert> : profile ? <ProfileForm profile={profile} onSaved={setProfile} /> : <p className="text-muted">Carregando…</p>}
+          {loadError ? <FormAlert kind="info">{loadError}</FormAlert> : profile ? <ProfileForm profile={profile} onSaved={setProfile} /> : <p className="text-tinta-suave">Carregando…</p>}
         </div>
       </section>
 
       <section aria-labelledby="senha">
-        <h2 id="senha" className="text-lg font-semibold">
+        <h2 id="senha" className="font-display text-2xl leading-tight">
           Trocar senha
         </h2>
         <div className="mt-4">
@@ -79,7 +79,7 @@ export function AccountPanel() {
           await logout();
           router.replace("/");
         }}
-        className="text-sm font-medium text-muted underline-offset-4 hover:text-brand hover:underline"
+        className="inline-flex min-h-11 items-center text-sm font-medium text-tinta-suave underline hover:text-tinta"
       >
         Sair da conta
       </button>
@@ -116,12 +116,12 @@ function EmailStatus({ confirmed, email }: { confirmed: boolean; email: string }
               setState("error");
             }
           }}
-          className="mt-2 font-medium text-brand underline-offset-4 hover:underline disabled:opacity-60"
+          className="mt-2 font-medium underline disabled:opacity-60"
         >
           {state === "pending" ? "Enviando…" : "Reenviar link de confirmação"}
         </button>
       )}
-      {state === "error" && error && <p className="mt-2 text-red-700">{error}</p>}
+      {state === "error" && error && <p className="mt-2 text-alerta">{error}</p>}
     </FormAlert>
   );
 }

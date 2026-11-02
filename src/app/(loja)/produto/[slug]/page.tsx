@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense } from "react";
 import { getProductBySlug, type ProductDetails } from "@/features/catalog/api";
+import { Breadcrumb } from "@/features/catalog/components/Breadcrumb";
 import { ProductPurchase, ProductPurchaseFromUrl } from "@/features/catalog/components/ProductPurchase";
 import { breadcrumbJsonLd, productJsonLd } from "@/features/catalog/json-ld";
 import { absoluteUrl } from "@/shared/lib/site";
@@ -74,7 +74,7 @@ function ProductView({ product }: { product: ProductDetails }) {
   const productUrl = absoluteUrl(`/produto/${product.slug}`);
 
   return (
-    <article>
+    <article className="vitrine flex-1">
       <JsonLd
         data={[
           productJsonLd(product, productUrl),
@@ -86,22 +86,22 @@ function ProductView({ product }: { product: ProductDetails }) {
         ]}
       />
 
-      <nav aria-label="Trilha de navegação" className="mb-6 text-sm text-muted">
-        <Link href="/" className="hover:text-brand">
-          Início
-        </Link>
-        <span aria-hidden="true"> / </span>
-        <Link href={`/categoria/${product.category.slug}`} className="hover:text-brand">
-          {product.category.name}
-        </Link>
-        <span aria-hidden="true"> / </span>
-        <span aria-current="page">{product.name}</span>
-      </nav>
+      <div className="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:pt-8">
+        <Breadcrumb
+          items={[
+            { name: "Início", href: "/" },
+            { name: product.category.name, href: `/categoria/${product.category.slug}` },
+            { name: product.name },
+          ]}
+        />
 
-      {/* O HTML do servidor (ISR) já traz a seleção padrão; no navegador a versão que lê ?cor=&tamanho= assume. */}
-      <Suspense fallback={<ProductPurchase product={product} />}>
-        <ProductPurchaseFromUrl product={product} />
-      </Suspense>
+        <div className="mt-6">
+          {/* O HTML do servidor (ISR) já traz a seleção padrão; no navegador a versão que lê ?cor=&tamanho= assume. */}
+          <Suspense fallback={<ProductPurchase product={product} />}>
+            <ProductPurchaseFromUrl product={product} />
+          </Suspense>
+        </div>
+      </div>
     </article>
   );
 }

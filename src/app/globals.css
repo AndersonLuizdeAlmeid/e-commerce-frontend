@@ -1,15 +1,204 @@
 @import "tailwindcss";
 
+/*
+ * Mundo "Cartela na vitrine rosé" (specs/26 §2, revisado com a cliente em 29/10/2026). Tintas fixas: vitrine
+ * (rosé claro), cartela (marfim), folha (dourado) e tinta, mais grafite/prata da linha masculina. A folha só marca
+ * o que está selecionado ou ativo e nunca carrega texto sobre a cartela.
+ */
 @theme {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --color-ink: #151515;
-  --color-muted: #5f6368;
-  --color-line: #e7e5e4;
-  --color-surface: #fafaf9;
-  --color-brand: #1b3a6b;
+  --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+  /* Prata: Didone desenhada para tela; os traços finos não somem no fundo claro como os da Bodoni. */
+  --font-display: var(--font-prata), "Didot", "Bodoni 72", serif;
+
+  --color-tinta: #1a1a17;
+  /* Texto secundário sobre a cartela (6,2:1) e sobre a vitrine (4,9:1). */
+  --color-tinta-suave: #5b574e;
+  --color-cartela: #f4eee3;
+  --color-linha: #d9d0c0;
+
+  --color-vitrine: #e9cfcb;
+  /* Rosé mais fundo: barra fixa do celular, pontos das etiquetas e realces sobre a vitrine. */
+  --color-vitrine-funda: #d4b2ad;
+  /* Texto sobre a vitrine: principal (11,8:1) e secundário (5,9:1). */
+  --color-vitrine-tinta: #1a1a17;
+  --color-vitrine-texto: #5a4746;
+
+  /* Folha sobre a cartela (indicador e marca, 3,5:1) e folha de estado sobre a vitrine (3,9:1; marfim nela: 5:1). */
+  --color-folha: #9c7a3c;
+  --color-folha-vitrine: #7e6128;
+
+  --color-grafite: #2e2e2c;
+  --color-prata: #c9cccf;
+
+  /* Única cor fora do mundo, decidida uma vez: erro (7,4:1 sobre a cartela). */
+  --color-alerta: #8a2c1f;
+
+  --ease-solta: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-body {
-  background: var(--color-surface);
-  color: var(--color-ink);
+/* Base e componentes ficam em camadas para os utilitários do Tailwind (ex.: outline-none) prevalecerem. */
+@layer base {
+  :root {
+    --foco: var(--color-tinta);
+    color-scheme: light;
+    accent-color: var(--color-tinta);
+    scrollbar-color: color-mix(in srgb, var(--color-tinta) 35%, transparent) transparent;
+  }
+
+  body {
+    background: var(--color-cartela);
+    color: var(--color-tinta);
+    caret-color: var(--color-tinta);
+  }
+
+  ::selection {
+    background: var(--color-tinta);
+    color: var(--color-cartela);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--foco);
+    outline-offset: 3px;
+  }
+
+  a {
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
+  }
+}
+
+@layer components {
+  /* A vitrine: fundo rosé com uma trama fraca de papel, sem gradiente de cor. */
+  .vitrine {
+    --foco: var(--color-vitrine-tinta);
+    background-color: var(--color-vitrine);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+    color: var(--color-vitrine-tinta);
+  }
+
+  /* Superfícies de cartela dentro da vitrine. */
+  .cartela {
+    --foco: var(--color-tinta);
+    background-color: var(--color-cartela);
+    color: var(--color-tinta);
+  }
+
+  /* A cartela da linha masculina: grafite com folha prateada (specs/26 §2.2). Marfim sobre ela, 11:1; prata, 8:1. */
+  .cartela-grafite {
+    --foco: var(--color-prata);
+    background-color: var(--color-grafite);
+    color: var(--color-cartela);
+  }
+
+  .numeros {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  /*
+   * Brilho de folha (specs/26 §2.5): a cartela inclina na direção do ponteiro e uma luz passa por ela, como
+   * sobre metal. O componente `Brilho` atualiza --rx, --ry, --mx e --my; sem ponteiro fica tudo parado.
+   */
+  .brilho {
+    transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition: transform 400ms var(--ease-solta), box-shadow 300ms var(--ease-solta);
+  }
+
+  .brilho-luz {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    mix-blend-mode: soft-light;
+    background: radial-gradient(circle at var(--mx, 50%) var(--my, 30%), rgb(255 255 255 / 0.8), transparent 45%);
+    transition: opacity 300ms var(--ease-solta);
+  }
+}
+
+/*
+ * Sem mouse (celular), a luz passa uma vez pela cartela quando ela entra na tela, levada pela rolagem
+ * (specs/26 §2.5: "no toque, a luz aparece sem inclinar"). Onde não há animação por rolagem, a luz não aparece.
+ */
+@property --mx {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 50%;
+}
+
+@keyframes brilho-passa {
+  0% {
+    --mx: -20%;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    --mx: 120%;
+    opacity: 0;
+  }
+}
+
+@keyframes brilho-pulsa {
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@media (hover: none) {
+  .brilho-luz {
+    animation: brilho-passa linear both;
+    animation-timeline: view();
+    animation-range: entry 30% cover 55%;
+  }
+}
+
+/* Com movimento reduzido, a luz por rolagem vira só um pulso de opacidade, sem atravessar a cartela. */
+@media (hover: none) and (prefers-reduced-motion: reduce) {
+  .brilho-luz {
+    animation-name: brilho-pulsa;
+  }
+}
+
+/* Etiqueta com ponta (navegação e filtros): o recorte fica num elemento interno para não cortar o anel de foco. */
+.etiqueta-ponta {
+  clip-path: polygon(0.625rem 0, 100% 0, 100% 100%, 0.625rem 100%, 0 50%);
+}
+
+/* Virar a cartela na página do produto (specs/26 §2.5). */
+.virar {
+  perspective: 1600px;
+}
+
+.virar-miolo {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 700ms var(--ease-solta);
+}
+
+.virar-frente,
+.virar-verso {
+  backface-visibility: hidden;
+}
+
+/* O verso tem a altura da frente; texto longo rola dentro dele. */
+.virar-verso {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  transform: rotateY(180deg);
+}
+
+.virar[data-virada="true"] .virar-miolo {
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brilho {
+    transform: none !important;
+  }
+
+  .virar-miolo,
+  .virar-miolo * {
+    transition: none !important;
+  }
 }

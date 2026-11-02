@@ -5,8 +5,8 @@
       "startServerReadyPattern": "Ready",
       "url": [
         "http://localhost:3000/",
-        "http://localhost:3000/categoria/camisetas",
-        "http://localhost:3000/produto/camiseta-basica"
+        "http://localhost:3000/categoria/aneis",
+        "http://localhost:3000/produto/anel-solitario-zirconia"
       ],
       "numberOfRuns": 3,
       "settings": {

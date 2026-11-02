@@ -1,21 +1,30 @@
+import { SearchIcon } from "./icons";
+
 /** Busca por GET em /busca — funciona sem JavaScript e é o alvo do SearchAction do JSON-LD. */
-export function SearchForm({ defaultValue = "" }: { defaultValue?: string }) {
+export function SearchForm({ defaultValue = "", compact = false }: { defaultValue?: string; compact?: boolean }) {
   return (
-    <form action="/busca" method="get" role="search" className="flex items-center gap-2">
-      <label htmlFor="busca-q" className="sr-only">
-        Buscar produtos
+    <form
+      action="/busca"
+      method="get"
+      role="search"
+      className="flex items-center border-b border-tinta/40 focus-within:border-tinta focus-within:shadow-[0_1px_0_0_var(--color-tinta)]"
+    >
+      <label htmlFor={compact ? "busca-q-topo" : "busca-q"} className="sr-only">
+        Buscar peças
       </label>
       <input
-        id="busca-q"
+        id={compact ? "busca-q-topo" : "busca-q"}
         type="search"
         name="q"
         defaultValue={defaultValue}
-        placeholder="Buscar produtos"
+        placeholder="Buscar peças"
         maxLength={100}
-        className="w-44 rounded-md border border-line bg-white px-3 py-2 text-sm sm:w-56"
+        className={`min-h-11 bg-transparent py-2 text-base placeholder:text-tinta-suave focus-visible:outline-none ${
+          compact ? "w-28 sm:w-48" : "w-full"
+        }`}
       />
-      <button type="submit" className="rounded-md bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand/90">
-        Buscar
+      <button type="submit" className="grid size-11 shrink-0 place-items-center" aria-label="Buscar">
+        <SearchIcon />
       </button>
     </form>
   );

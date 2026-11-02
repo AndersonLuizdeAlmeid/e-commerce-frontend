@@ -1,10 +1,11 @@
-import type { InputHTMLAttributes } from "react";
+import type { InputHTMLAttributes, Ref } from "react";
 
 interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
   name: string;
   error?: string | null;
   hint?: string;
+  ref?: Ref<HTMLInputElement>;
 }
 
 /** Campo com rótulo visível, dica e erro ligados por aria-describedby (WCAG 2.1 AA, arquivo 16 §8). */
@@ -14,7 +15,7 @@ export function TextField({ label, name, error, hint, id, className, ...input }:
 
   return (
     <div className={className}>
-      <label htmlFor={fieldId} className="block text-sm font-medium">
+      <label htmlFor={fieldId} className="block text-xs font-medium uppercase tracking-[0.16em]">
         {label}
       </label>
       <input
@@ -22,18 +23,18 @@ export function TextField({ label, name, error, hint, id, className, ...input }:
         name={name}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
-        className={`mt-1.5 block w-full rounded-md border bg-white px-3 py-2.5 text-base focus-visible:outline-2 focus-visible:outline-brand ${
-          error ? "border-red-700" : "border-line"
+        className={`mt-1 block min-h-11 w-full border-b bg-transparent py-2 text-base focus-visible:shadow-[0_1px_0_0_currentColor] focus-visible:outline-none ${
+          error ? "border-alerta text-alerta" : "border-tinta/40 focus-visible:border-tinta"
         }`}
         {...input}
       />
       {hint && !error && (
-        <p id={`${fieldId}-dica`} className="mt-1 text-xs text-muted">
+        <p id={`${fieldId}-dica`} className="mt-1.5 text-xs text-tinta-suave">
           {hint}
         </p>
       )}
       {error && (
-        <p id={`${fieldId}-erro`} className="mt-1 text-sm text-red-700">
+        <p id={`${fieldId}-erro`} className="mt-1.5 text-sm text-alerta">
           {error}
         </p>
       )}
@@ -41,40 +42,42 @@ export function TextField({ label, name, error, hint, id, className, ...input }:
   );
 }
 
+/** Avisos em tinta: o erro ganha a única cor fora do mundo, o resto fica na cartela (specs/26 §2.2). */
 export function FormAlert({ kind, children }: { kind: "error" | "success" | "info"; children: React.ReactNode }) {
   const styles = {
-    error: "border-red-200 bg-red-50 text-red-800",
-    success: "border-emerald-200 bg-emerald-50 text-emerald-900",
-    info: "border-line bg-white text-ink",
+    error: "border-alerta text-alerta",
+    success: "border-tinta text-tinta",
+    info: "border-linha text-tinta",
   }[kind];
 
   return (
-    <div role={kind === "error" ? "alert" : "status"} className={`rounded-md border px-4 py-3 text-sm ${styles}`}>
+    <div role={kind === "error" ? "alert" : "status"} className={`border px-4 py-3 text-sm ${styles}`}>
       {children}
     </div>
   );
 }
 
+/** Classes do botão principal (cartão tinta): também usadas em links que fazem papel de botão. */
+export const primaryButtonClass =
+  "inline-flex min-h-12 w-full items-center justify-center bg-tinta px-6 text-sm font-medium uppercase tracking-[0.18em] text-cartela transition-colors hover:bg-grafite disabled:opacity-60";
+
 export function SubmitButton({ pending, children }: { pending: boolean; children: React.ReactNode }) {
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      aria-busy={pending}
-      className="w-full rounded-md bg-brand px-5 py-3 font-medium text-white hover:bg-brand/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-60"
-    >
+    <button type="submit" disabled={pending} aria-busy={pending} className={primaryButtonClass}>
       {pending ? "Aguarde…" : children}
     </button>
   );
 }
 
-/** Moldura das telas de conta: estreita, centralizada e com título. */
+/**
+ * Moldura das telas de conta: uma cartela estreita e lisa, com título em Prata (modo Operate, specs/26 §4.7).
+ */
 export function AuthCard({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
-    <section className="mx-auto max-w-md">
-      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-      {description && <p className="mt-2 text-sm text-muted">{description}</p>}
-      <div className="mt-8">{children}</div>
+    <section className="mx-auto w-full max-w-md px-4 py-12 sm:py-16">
+      <h1 className="font-display text-4xl leading-tight">{title}</h1>
+      {description && <p className="mt-3 text-tinta-suave">{description}</p>}
+      <div className="mt-10">{children}</div>
     </section>
   );
 }

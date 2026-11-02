@@ -123,6 +123,46 @@ export interface components {
             minPrice: number | null;
             /** Format: double */
             maxPrice: number | null;
+            categories: components["schemas"]["FilterCategoryResponse"][];
+        };
+        FilterCategoryResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+        };
+        CollectionSummaryResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            cardTheme: string;
+        };
+        CollectionDetailsResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            description: string;
+            seo: components["schemas"]["SeoResponse"];
+            imageUrl: string | null;
+            cardTheme: string;
+        };
+        FeaturedResponse: {
+            product: components["schemas"]["ProductSummaryResponse"];
+            /** Format: uuid */
+            colorId: string | null;
+            isFallback: boolean;
+        };
+        OccasionResponse: {
+            name: string;
+            text: string;
+            imageUrl: string | null;
+            products: components["schemas"]["ProductSummaryResponse"][];
+        };
+        ShowcaseResponse: {
+            featured: components["schemas"]["FeaturedResponse"] | null;
+            occasion: components["schemas"]["OccasionResponse"] | null;
         };
         CategoryDetailsResponse: {
             /** Format: uuid */
@@ -131,12 +171,19 @@ export interface components {
             slug: string;
             description: string;
             seo: components["schemas"]["SeoResponse"];
+            variantLabels: components["schemas"]["VariantLabelsResponse"];
+        };
+        VariantLabelsResponse: {
+            color: string;
+            size: string;
         };
         CategorySummaryResponse: {
             /** Format: uuid */
             id: string;
             name: string;
             slug: string;
+            /** Format: uuid */
+            parentId: null | string;
         };
         ChangePasswordRequest: {
             currentPassword: string;
@@ -241,6 +288,7 @@ export interface components {
             sizes: components["schemas"]["SizeResponse"][];
             variants: components["schemas"]["ProductVariantResponse"][];
             images: components["schemas"]["ProductImageResponse"][];
+            variantLabels: components["schemas"]["VariantLabelsResponse"];
             /** Format: date-time */
             updatedAt: string;
         };
@@ -286,6 +334,7 @@ export interface components {
         SitemapResponse: {
             categories: components["schemas"]["SitemapEntryResponse"][];
             products: components["schemas"]["SitemapEntryResponse"][];
+            collections: components["schemas"]["SitemapEntryResponse"][];
         };
         SizeResponse: {
             /** Format: uuid */

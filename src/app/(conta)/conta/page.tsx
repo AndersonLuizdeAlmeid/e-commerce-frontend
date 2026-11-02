@@ -10,9 +10,9 @@ export const metadata: Metadata = {
 
 export default function AccountPage() {
   return (
-    <section className="mx-auto max-w-xl">
-      <h1 className="text-2xl font-semibold tracking-tight">Minha conta</h1>
-      <div className="mt-8">
+    <section className="mx-auto w-full max-w-xl px-4 py-12 sm:py-16">
+      <h1 className="font-display text-4xl leading-tight">Minha conta</h1>
+      <div className="mt-10">
         <Suspense>
           <AccountPanel />
         </Suspense>

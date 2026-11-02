@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCatalogFilters, getCategoryBySlug, getProducts } from "@/features/catalog/api";
+import { Breadcrumb } from "@/features/catalog/components/Breadcrumb";
 import { ListingFilters } from "@/features/catalog/components/ListingFilters";
+import { ListingLayout } from "@/features/catalog/components/ListingLayout";
 import { Pagination } from "@/features/catalog/components/Pagination";
 import { ProductGrid } from "@/features/catalog/components/ProductGrid";
 import { breadcrumbJsonLd } from "@/features/catalog/json-ld";
@@ -13,6 +14,7 @@ import {
   toProductListQuery,
   type SearchParams,
 } from "@/features/catalog/listing-params";
+import { resolveVariantLabels } from "@/features/catalog/variant-labels";
 import { absoluteUrl } from "@/shared/lib/site";
 import { JsonLd } from "@/shared/ui/JsonLd";
 
@@ -48,7 +50,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   const [{ slug }, query] = await Promise.all([params, searchParams]);
   const category = await getCategoryBySlug(slug);
   if (!category) {
-    notFound();
+    notFound(); // O layout já trata slug antigo e inexistente; aqui é a categoria sair entre os dois.
   }
 
   const state = parseListingParams(query);
@@ -57,6 +59,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     getProducts(toProductListQuery(state, { category: category.slug })),
     getCatalogFilters(category.slug),
   ]);
+  const labels = resolveVariantLabels(category);
 
   return (
     <article>
@@ -67,33 +70,31 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         ])}
       />
 
-      <nav aria-label="Trilha de navegação" className="text-sm text-muted">
-        <Link href="/" className="hover:text-brand">
-          Início
-        </Link>
-        <span aria-hidden="true"> / </span>
-        <span aria-current="page">{category.name}</span>
-      </nav>
-
-      <h1 className="mt-4 text-3xl font-semibold tracking-tight">{category.name}</h1>
-      {category.description && <p className="mt-3 max-w-2xl text-muted">{category.description}</p>}
-
-      <div className="mt-10 grid gap-10 lg:grid-cols-[16rem_1fr]">
-        <aside aria-label="Filtros">
-          <ListingFilters action={basePath} filters={filters} state={state} />
-        </aside>
-
-        <section aria-label="Produtos">
-          <p className="mb-6 text-sm text-muted">
-            {products.totalItems === 1 ? "1 produto" : `${products.totalItems} produtos`}
-          </p>
-          <ProductGrid
-            products={products.items}
-            emptyMessage="Nenhum produto encontrado com esses filtros. Tente limpar algum deles."
-          />
-          <Pagination basePath={basePath} state={state} totalPages={products.totalPages} />
-        </section>
-      </div>
+      <ListingLayout
+        heading={
+          <>
+            <Breadcrumb items={[{ name: "Início", href: "/" }, { name: category.name }]} />
+            <h1 className="mt-4 font-display text-4xl leading-[1.02] tracking-[-0.02em] sm:text-6xl">{category.name}</h1>
+          </>
+        }
+        intro={
+          <>
+            {category.description && <p className="mt-3 max-w-2xl text-vitrine-texto">{category.description}</p>}
+            <p className="numeros mt-4 text-sm text-vitrine-texto">
+              {products.totalItems === 1 ? "1 peça" : `${products.totalItems} peças`}
+            </p>
+          </>
+        }
+        filters={(idPrefix) => <ListingFilters action={basePath} filters={filters} state={state} idPrefix={idPrefix} labels={labels} />}
+      >
+        <ProductGrid
+          besideFilters
+          products={products.items}
+          emptyMessage="Nenhuma peça com esses filtros."
+          emptyAction={hasRefinements(state) ? { href: basePath, label: "Limpar filtros" } : { href: "/", label: "Ver as novidades" }}
+        />
+        <Pagination basePath={basePath} state={state} totalPages={products.totalPages} />
+      </ListingLayout>
     </article>
   );
 }

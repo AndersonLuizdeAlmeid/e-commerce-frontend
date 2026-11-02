@@ -46,14 +46,14 @@ export function LoginForm() {
       <TextField label="E-mail" name="email" type="email" autoComplete="email" inputMode="email" required error={emailError} />
       <TextField label="Senha" name="password" type="password" autoComplete="current-password" required />
       <div className="text-right text-sm">
-        <Link href="/recuperar-senha" className="text-brand underline-offset-4 hover:underline">
+        <Link href="/recuperar-senha" className="underline">
           Esqueci minha senha
         </Link>
       </div>
       <SubmitButton pending={pending}>Entrar</SubmitButton>
-      <p className="text-center text-sm text-muted">
+      <p className="text-center text-sm text-tinta-suave">
         Ainda não tem conta?{" "}
-        <Link href={next === "/conta" ? "/cadastro" : `/cadastro?next=${encodeURIComponent(next)}`} className="font-medium text-brand hover:underline">
+        <Link href={next === "/conta" ? "/cadastro" : `/cadastro?next=${encodeURIComponent(next)}`} className="font-medium underline">
           Criar conta
         </Link>
       </p>
