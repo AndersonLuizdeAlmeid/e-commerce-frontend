@@ -19,8 +19,9 @@ const nextConfig: NextConfig = {
         pathname: `${imagesUrl.pathname.replace(/\/$/, "")}/**`,
       },
     ],
-    // O next/image recusa IP local por segurança; só o bucket de desenvolvimento precisa disso.
-    dangerouslyAllowLocalIP: process.env.NODE_ENV !== "production",
+    // O next/image recusa IP local por segurança; só o bucket de desenvolvimento precisa disso. O ambiente de dev da VM
+    // também, porque lá o bucket só existe na rede interna do Compose (IMAGES_ALLOW_LOCAL_IP, lida no build da imagem).
+    dangerouslyAllowLocalIP: process.env.NODE_ENV !== "production" || process.env.IMAGES_ALLOW_LOCAL_IP === "true",
   },
 };
 
