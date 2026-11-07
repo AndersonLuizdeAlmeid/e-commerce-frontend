@@ -1,0 +1,14 @@
+.git
+.github
+.next
+.impeccable
+node_modules
+coverage
+out
+build
+*.tsbuildinfo
+# Segredos locais nunca entram na imagem
+.env
+.env*.local
+Dockerfile
+.dockerignore
