@@ -66,7 +66,10 @@ export function OrderDetail({ id }: { id: string }) {
     try {
       await ordersApi.cancel(id);
       setOrder(await ordersApi.get(id));
-      setNotice({ kind: "success", text: "Pedido cancelado. As peças voltaram para a loja." });
+      setNotice({
+        kind: "success",
+        text: order?.status === "PaymentConfirmed" ? "Pedido cancelado. O estorno foi pedido e avisamos por e-mail quando sair." : "Pedido cancelado. As peças voltaram para a loja.",
+      });
     } catch (err) {
       setNotice({ kind: "error", text: errorMessage(err) });
     } finally {
@@ -194,7 +197,9 @@ export function OrderDetail({ id }: { id: string }) {
         <section className="border-t border-linha pt-6">
           {confirming ? (
             <div className="flex flex-wrap items-center gap-x-5" role="group" aria-label="Confirmar cancelamento">
-              <span className="text-sm">Cancelar o pedido {order.number}?</span>
+              <span className="text-sm">
+                Cancelar o pedido {order.number}?{order.status === "PaymentConfirmed" && " O valor pago é estornado."}
+              </span>
               <button type="button" disabled={cancelling} onClick={() => void cancel()} className="inline-flex min-h-11 items-center text-sm font-medium underline disabled:opacity-60">
                 {cancelling ? "Cancelando…" : "Sim, cancelar"}
               </button>
