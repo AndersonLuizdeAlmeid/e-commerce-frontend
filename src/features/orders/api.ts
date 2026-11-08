@@ -9,6 +9,16 @@ export type PlacedOrder = Schemas["PlacedOrderResponse"];
 export type OrderSummary = Schemas["OrderSummaryResponse"];
 export type Order = Schemas["OrderResponse"];
 export type OrdersPage = Schemas["PagedResponseOfOrderSummaryResponse"];
+export type Payment = Schemas["PaymentResponse"];
+
+/** Cartão: o token e o meio vêm do Brick do Mercado Pago; o número do cartão nunca passa pela loja (arquivo 21 §2). */
+export interface PayRequest {
+  method: "Pix" | "CreditCard";
+  cardToken?: string;
+  paymentMethodId?: string;
+  issuerId?: string | null;
+  installments?: number;
+}
 
 export interface PlaceOrderRequest {
   addressId: string;
@@ -33,5 +43,10 @@ export const ordersApi = {
   list: (page = 1) => apiRequest<OrdersPage>(`/api/v1/orders?page=${page}`, { auth: true }),
   get: (id: string) => apiRequest<Order>(`/api/v1/orders/${id}`, { auth: true }),
   cancel: (id: string) => apiRequest(`/api/v1/orders/${id}/cancel`, { method: "POST", auth: true }),
+  pay: (id: string, request: PayRequest, idempotencyKey: string) =>
+    apiRequest<Payment>(`/api/v1/orders/${id}/payments`, { method: "POST", body: request, auth: true, headers: { "Idempotency-Key": idempotencyKey } }),
+  currentPayment: (id: string) => apiRequest<Payment>(`/api/v1/orders/${id}/payments/current`, { auth: true }),
+  /** Só em desenvolvimento, com a plataforma falsa (entrega 4 §3, P3). */
+  simulateApproval: (id: string) => apiRequest(`/api/v1/orders/${id}/payments/simulate-approval`, { method: "POST", auth: true }),
   settings: () => apiRequest<Schemas["OrderingSettingsResponse"]>("/api/v1/orders/settings", { auth: true }),
 };

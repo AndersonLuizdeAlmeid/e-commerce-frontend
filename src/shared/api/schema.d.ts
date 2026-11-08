@@ -101,6 +101,123 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders/{id}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Paga o pedido com PIX ou cartão (RF-044)
+         * @description Só pedido aguardando pagamento e no prazo (CA1, senão 422). O valor é o total do pedido (CA4). PIX pedido de novo devolve o mesmo QR enquanto vale. Cartão recusado → `status: Rejected`, e a cliente pode tentar de novo (CA3). `Idempotency-Key` repete a resposta da mesma tentativa.
+         */
+        post: operations["PayOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/payments/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Última tentativa de pagamento do pedido; a tela do PIX consulta enquanto espera */
+        get: operations["GetCurrentPayment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/payments/simulate-approval": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Só em desenvolvimento, com o provedor falso: aprova o PIX pendente
+         * @description Passa pelo mesmo caminho do webhook. Com o Mercado Pago de verdade → 404.
+         */
+        post: operations["SimulatePaymentApproval"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/webhooks/payments/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Notificação da plataforma de pagamento (RF-045)
+         * @description Sem login e sem CORS. Assinatura inválida → 401. Responde 200 rápido; a consulta à plataforma vai para o Outbox.
+         */
+        post: operations["PaymentWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/variants/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preço, foto e disponibilidade atuais da sacola do visitante
+         * @description Mesma resposta de `GET /cart`, sem cache. Variação inexistente fica de fora.
+         */
+        post: operations["LookupCartVariants"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/variants/by-barcode/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Localiza a variação pelo código de barras (RF-059)
+         * @description Dígito verificador errado → 400. Código sem variação → 404 (`Catalog.BarcodeNotFound`), para o painel oferecer o vínculo.
+         */
+        get: operations["AdminFindVariantByBarcode"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orders": {
         parameters: {
             query?: never;
@@ -691,46 +808,6 @@ export interface paths {
          * @description Soma com limite de 99 por peça. O que não entra volta em `skippedVariantIds`: peça fora da loja ou além de 50 peças diferentes.
          */
         post: operations["MergeCart"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/catalog/variants/lookup": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Preço, foto e disponibilidade atuais da sacola do visitante
-         * @description Mesma resposta de `GET /cart`, sem cache. Variação inexistente fica de fora.
-         */
-        post: operations["LookupCartVariants"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/variants/by-barcode/{code}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Localiza a variação pelo código de barras (RF-059)
-         * @description Dígito verificador errado → 400. Código sem variação → 404 (`Catalog.BarcodeNotFound`), para o painel oferecer o vínculo.
-         */
-        get: operations["AdminFindVariantByBarcode"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1823,6 +1900,31 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
         };
+        PaymentResponse: {
+            /** Format: uuid */
+            id: string;
+            method: string;
+            status: string;
+            statusDetail: null | string;
+            /** Format: double */
+            amount: number;
+            /** Format: int32 */
+            installments: null | number;
+            pixQrCode: null | string;
+            pixQrCodeBase64: null | string;
+            /** Format: date-time */
+            expiresAt: null | string;
+            orderStatus: string;
+            canSimulate: boolean;
+        };
+        PayOrderRequest: {
+            method: string;
+            cardToken: null | string;
+            paymentMethodId: null | string;
+            issuerId: null | string;
+            /** Format: int32 */
+            installments: null | number;
+        };
         PlacedOrderResponse: {
             /** Format: uuid */
             id: string;
@@ -2424,6 +2526,142 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    PayOrder: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentResponse"];
+                };
+            };
+        };
+    };
+    GetCurrentPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentResponse"];
+                };
+            };
+        };
+    };
+    SimulatePaymentApproval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PaymentWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LookupCartVariants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CartLinesRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartResponse"];
+                };
+            };
+        };
+    };
+    AdminFindVariantByBarcode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VariantByBarcodeResponse"];
+                };
             };
         };
     };
@@ -3322,52 +3560,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MergeCartResponse"];
-                };
-            };
-        };
-    };
-    LookupCartVariants: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CartLinesRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CartResponse"];
-                };
-            };
-        };
-    };
-    AdminFindVariantByBarcode: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                code: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["VariantByBarcodeResponse"];
                 };
             };
         };

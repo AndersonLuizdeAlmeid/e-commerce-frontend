@@ -13,6 +13,7 @@ import { formatPrice } from "@/shared/lib/format";
 import { FormAlert } from "@/shared/ui/form";
 import { ordersApi, type Order } from "../api";
 import { cancellationLabel, orderStatusLabel, paymentCountdown } from "../gift";
+import { PaymentPanel } from "./PaymentPanel";
 
 const dateTime = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" });
 
@@ -76,6 +77,11 @@ export function OrderDetail({ id }: { id: string }) {
 
   const pending = order.status === "PendingPayment";
 
+  async function reload() {
+    setOrder(await ordersApi.get(id));
+    setNotice({ kind: "success", text: "Pagamento confirmado! Mandamos a confirmação para o seu e-mail." });
+  }
+
   return (
     <div className="space-y-8">
       {isNew && pending && (
@@ -95,11 +101,13 @@ export function OrderDetail({ id }: { id: string }) {
         </p>
         {pending && (
           <p className="mt-2 text-sm">
-            Pague até {dateTime.format(new Date(order.paymentDueAt))} ({paymentCountdown(order.paymentDueAt)}). O pagamento por PIX e cartão
-            entra nesta tela; enquanto isso, fale com a MO para combinar.
+            Pague até {dateTime.format(new Date(order.paymentDueAt))} ({paymentCountdown(order.paymentDueAt)}). Depois disso o pedido é
+            cancelado e as peças voltam para a loja.
           </p>
         )}
       </section>
+
+      {pending && <PaymentPanel orderId={order.id} onConfirmed={() => void reload()} />}
 
       <section aria-labelledby="pecas" className="space-y-3">
         <h2 id="pecas" className="font-display text-xl leading-tight">
