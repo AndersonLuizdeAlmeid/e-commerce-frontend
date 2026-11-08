@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { sombraCartela } from "@/features/catalog/components/Cartela";
@@ -22,6 +23,7 @@ const quantityButton =
 export function CartPage() {
   const { mode, localLines, customerCart, refresh, setQuantity, remove, add, skippedOnMerge } = useCart();
   const { status, user } = useAuth();
+  const router = useRouter();
   const [localView, setLocalView] = useState<CartView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
@@ -100,7 +102,11 @@ export function CartPage() {
   const blocked = view?.items.some((item) => item.status !== "Available") ?? false;
 
   function checkout() {
-    setNotice("A compra online chega na próxima etapa da loja. Sua sacola fica guardada.");
+    if (user?.role === "Admin") {
+      setNotice("Esta é uma conta de administrador, que não faz compras pela loja.");
+      return;
+    }
+    router.push("/checkout");
   }
 
   return (
@@ -166,7 +172,7 @@ export function CartPage() {
               {blocked ? (
                 <p className="mt-5 text-sm font-medium">Ajuste as peças destacadas para seguir.</p>
               ) : mode === "local" && user?.role !== "Admin" ? (
-                <Link href="/login?next=/carrinho" className="mt-5 flex min-h-12 items-center justify-center bg-tinta px-4 pt-0.5 text-sm font-medium uppercase tracking-[0.18em] text-cartela transition-colors hover:bg-grafite">
+                <Link href="/login?next=/checkout" className="mt-5 flex min-h-12 items-center justify-center bg-tinta px-4 pt-0.5 text-sm font-medium uppercase tracking-[0.18em] text-cartela transition-colors hover:bg-grafite">
                   Finalizar compra
                 </Link>
               ) : (

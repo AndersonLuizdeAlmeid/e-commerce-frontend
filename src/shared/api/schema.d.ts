@@ -4,6 +4,592 @@
  */
 
 export interface paths {
+    "/api/v1/shipping/quotes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * PAC e SEDEX com preço e prazo para o CEP (RF-032)
+         * @description CEP inválido → 400 (CA1). Provedor fora do ar → valores de contingência, com `isFallback` e sem prazo (CA2). Loja sem configuração → 503 `Shipping.NotConfigured`. Peça fora da loja → 422.
+         */
+        post: operations["GetShippingQuotes"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/shipping/postal-codes/{cep}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Endereço pelo CEP (arquivo 22 §4.4)
+         * @description CEP inválido → 400. CEP que não existe → 404. Serviço fora do ar → 503: o endereço é preenchido à mão.
+         */
+        get: operations["GetPostalAddress"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/shipping/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** CEP de origem, manuseio, contingência e caixa padrão (RF-058); 204 se ainda não configurado */
+        get: operations["AdminGetShippingSettings"];
+        /** Salva a configuração de frete (RF-058) */
+        put: operations["AdminSaveShippingSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/shipping/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Regras de frete, na ordem em que são aplicadas (RF-058) */
+        get: operations["AdminListShippingRules"];
+        put?: never;
+        /**
+         * Cria regra de frete (RF-058)
+         * @description `effect`: `FreeShipping`, `PercentDiscount`, `FixedDiscount`, `Surcharge` ou `HideService`. Condição vazia vale para todos. Vigência em datas inclusivas, no horário de Brasília.
+         */
+        post: operations["AdminCreateShippingRule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/shipping/rules/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Edita regra de frete (RF-058) */
+        put: operations["AdminUpdateShippingRule"];
+        post?: never;
+        /** Exclui regra de frete (RF-058) */
+        delete: operations["AdminDeleteShippingRule"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Paga o pedido com PIX ou cartão (RF-044)
+         * @description Só pedido aguardando pagamento e no prazo (CA1, senão 422). O valor é o total do pedido (CA4). PIX pedido de novo devolve o mesmo QR enquanto vale. Cartão recusado → `status: Rejected`, e a cliente pode tentar de novo (CA3). `Idempotency-Key` repete a resposta da mesma tentativa.
+         */
+        post: operations["PayOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/payments/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Última tentativa de pagamento do pedido; a tela do PIX consulta enquanto espera */
+        get: operations["GetCurrentPayment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/payments/simulate-approval": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Só em desenvolvimento, com o provedor falso: aprova o PIX pendente
+         * @description Passa pelo mesmo caminho do webhook. Com o Mercado Pago de verdade → 404.
+         */
+        post: operations["SimulatePaymentApproval"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Parcelas permitidas e se há simulação (só com a plataforma falsa) */
+        get: operations["GetPaymentOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/webhooks/payments/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Notificação da plataforma de pagamento (RF-045)
+         * @description Sem login e sem CORS. Assinatura inválida → 401. Responde 200 rápido; a consulta à plataforma vai para o Outbox.
+         */
+        post: operations["PaymentWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/variants/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preço, foto e disponibilidade atuais da sacola do visitante
+         * @description Mesma resposta de `GET /cart`, sem cache. Variação inexistente fica de fora.
+         */
+        post: operations["LookupCartVariants"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/variants/by-barcode/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Localiza a variação pelo código de barras (RF-059)
+         * @description Dígito verificador errado → 400. Código sem variação → 404 (`Catalog.BarcodeNotFound`), para o painel oferecer o vínculo.
+         */
+        get: operations["AdminFindVariantByBarcode"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Meus pedidos, mais recentes primeiro (RF-041) */
+        get: operations["ListMyOrders"];
+        put?: never;
+        /**
+         * Fecha o pedido com a sacola guardada na conta (RF-040, RF-047)
+         * @description Recalcula o frete e trava o estoque; peça sem saldo → 409 com `items`. Sacola vazia, endereço que não é do cliente ou e-mail não confirmado → 422. O cabeçalho `Idempotency-Key` repete a resposta do pedido já criado com a mesma chave (200) em vez de criar outro (CA7).
+         */
+        post: operations["PlaceOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Detalhe do pedido (RF-042)
+         * @description Pedido de outro cliente → 404.
+         */
+        get: operations["GetMyOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancela o pedido que ainda espera pagamento (RF-043)
+         * @description Devolve o estoque e envia o EM-10. Pedido já pago → 422 até a fatia de estornos.
+         */
+        post: operations["CancelMyOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Valor atual da embalagem para presente (RF-047 CA2) */
+        get: operations["GetOrderingSettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/ordering/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Valor da embalagem para presente */
+        get: operations["AdminGetOrderingSettings"];
+        /** Muda o valor da embalagem; pedidos já feitos não mudam (RF-047 CA2) */
+        put: operations["AdminSaveOrderingSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cadastro de cliente, já com a sessão iniciada (RF-001) */
+        post: operations["Register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login (RF-002) */
+        post: operations["Login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Renova a sessão pelo cookie, com rotação (RF-003)
+         * @description Exige o header `X-Requested-With: ecommerce-web`.
+         */
+        post: operations["RefreshSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Encerra a sessão do cookie (RF-004)
+         * @description Funciona mesmo com o access token expirado. Exige o header `X-Requested-With: ecommerce-web`.
+         */
+        post: operations["Logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/change-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Troca de senha; encerra as outras sessões (RF-006) */
+        post: operations["ChangePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Envia o link de redefinição; sempre 202 (RF-008) */
+        post: operations["ForgotPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Redefine a senha pelo link do e-mail (RF-008) */
+        post: operations["ResetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/confirm-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirma o e-mail pelo link (RF-009) */
+        post: operations["ConfirmEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/resend-confirmation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reenvia o link de confirmação (RF-009 CA1) */
+        post: operations["ResendEmailConfirmation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Usuário logado */
+        get: operations["GetMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Perfil do cliente (RF-005) */
+        get: operations["GetProfile"];
+        /**
+         * Atualiza nome, telefone e CPF (RF-005)
+         * @description `cpf` vazio mantém o CPF atual.
+         */
+        put: operations["UpdateProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/addresses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Endereços do cliente, o padrão primeiro (RF-007) */
+        get: operations["ListAddresses"];
+        put?: never;
+        /**
+         * Guarda um endereço (RF-007)
+         * @description O primeiro endereço já nasce padrão; `isDefault` torna o novo o padrão. A UF precisa conferir com o CEP. Até 10 endereços (422 depois disso).
+         */
+        post: operations["CreateAddress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/addresses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Corrige um endereço (RF-007)
+         * @description Endereço de outro cliente → 404 (CA1). Pedidos já feitos não mudam: eles guardam uma cópia.
+         */
+        put: operations["UpdateAddress"];
+        post?: never;
+        /**
+         * Apaga um endereço (RF-007)
+         * @description Apagar o padrão passa o posto para o endereço mais recente.
+         */
+        delete: operations["DeleteAddress"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/addresses/{id}/default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Torna o endereço o padrão (RF-007) */
+        put: operations["SetDefaultAddress"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/catalog/categories": {
         parameters: {
             query?: never;
@@ -28,8 +614,65 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Dados da categoria ativa, com texto e SEO */
+        /**
+         * Dados da categoria ativa, com texto e SEO
+         * @description Slug antigo → 301 com Location para o slug atual (RN-025).
+         */
         get: operations["GetCategoryBySlug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/collections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Coleções ativas, na ordem da navegação (RF-024) */
+        get: operations["ListCollections"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/collections/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dados da coleção ativa: texto, SEO, capa e tema das cartelas (RF-024)
+         * @description Slug antigo → 301 com Location para o slug atual (CA4).
+         */
+        get: operations["GetCollectionBySlug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/showcase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Peça em destaque e ocasião vigente, para a home (RF-025) */
+        get: operations["GetShowcase"];
         put?: never;
         post?: never;
         delete?: never;
@@ -112,57 +755,870 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/cart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sacola com os preços atuais e os alertas de estoque (RF-030 CA3) */
+        get: operations["GetCart"];
+        put?: never;
+        post?: never;
+        /** Esvazia a sacola (RF-030) */
+        delete: operations["ClearCart"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cart/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Adiciona a peça; se já estiver na sacola, soma (RF-030)
+         * @description Variação inativa ou inexistente → 422 (CA2). Passar de 99 por peça ou de 50 peças diferentes → 422. Não reserva estoque (CA4).
+         */
+        post: operations["AddCartItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cart/items/{variantId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Troca a quantidade da peça (RF-030) */
+        put: operations["SetCartItemQuantity"];
+        post?: never;
+        /** Tira a peça da sacola (RF-030) */
+        delete: operations["RemoveCartItem"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cart/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Traz a sacola do visitante ao entrar, somando as quantidades (RF-031)
+         * @description Soma com limite de 99 por peça. O que não entra volta em `skippedVariantIds`: peça fora da loja ou além de 50 peças diferentes.
+         */
+        post: operations["MergeCart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/colors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cores e acabamentos (RF-057) */
+        get: operations["AdminListColors"];
+        put?: never;
+        /** Cria cor ou acabamento (RF-057) */
+        post: operations["AdminCreateColor"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/colors/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Edita cor ou acabamento (RF-057) */
+        put: operations["AdminUpdateColor"];
+        post?: never;
+        /** Remove, se não estiver em uso (RF-057) */
+        delete: operations["AdminDeleteColor"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/sizes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tamanhos, aros e comprimentos (RF-057) */
+        get: operations["AdminListSizes"];
+        put?: never;
+        /** Cria tamanho (RF-057) */
+        post: operations["AdminCreateSize"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/sizes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Edita tamanho e ordem (RF-057) */
+        put: operations["AdminUpdateSize"];
+        post?: never;
+        /** Remove, se não estiver em uso (RF-057) */
+        delete: operations["AdminDeleteSize"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Todas as categorias, ativas e inativas, com subcategorias (RF-050) */
+        get: operations["AdminListCategories"];
+        put?: never;
+        /**
+         * Cria categoria ou subcategoria (RF-050)
+         * @description `slug` vazio gera a partir do nome. `colorLabel`/`sizeLabel` vazios herdam da categoria mãe.
+         */
+        post: operations["AdminCreateCategory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/categories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Edita texto, SEO, rótulos da grade e categoria mãe (RF-050)
+         * @description Trocar o slug cria redirect 301 do antigo (RN-025). `version` diferente da atual → 409.
+         */
+        put: operations["AdminUpdateCategory"];
+        post?: never;
+        /** Exclui categoria sem produtos nem subcategorias (RF-050) */
+        delete: operations["AdminDeleteCategory"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/categories/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Ativa ou desativa (RF-050) */
+        patch: operations["AdminSetCategoryStatus"];
+        trace?: never;
+    };
+    "/api/v1/admin/collections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Todas as coleções, ativas e inativas (RF-024) */
+        get: operations["AdminListCollections"];
+        put?: never;
+        /**
+         * Cria coleção (RF-024)
+         * @description `slug` vazio gera a partir do nome. `cardTheme`: Ivory ou Graphite.
+         */
+        post: operations["AdminCreateCollection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/collections/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Edita coleção (RF-024)
+         * @description Trocar o slug cria redirect 301 do antigo (CA4). `version` diferente da atual → 409.
+         */
+        put: operations["AdminUpdateCollection"];
+        post?: never;
+        /** Exclui a coleção; as peças continuam na loja (RF-024 CA6) */
+        delete: operations["AdminDeleteCollection"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/collections/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Ativa ou desativa (RF-024) */
+        patch: operations["AdminSetCollectionStatus"];
+        trace?: never;
+    };
+    "/api/v1/admin/collections/{id}/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Inclui peças em lote; a que já está fica como está (RF-024 CA5) */
+        post: operations["AdminAddCollectionProducts"];
+        /** Remove peças em lote (RF-024) */
+        delete: operations["AdminRemoveCollectionProducts"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/collections/{id}/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Envia a capa: JPEG, PNG, WebP ou HEIC, até 15 MB (RF-061) */
+        put: operations["AdminSetCollectionImage"];
+        post?: never;
+        /** Remove a capa (RF-061) */
+        delete: operations["AdminRemoveCollectionImage"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Produtos ativos e inativos, com busca por nome, SKU ou código de barras (RF-051) */
+        get: operations["AdminListProducts"];
+        put?: never;
+        /**
+         * Cria o produto inativo (RF-051)
+         * @description `slug` vazio gera a partir do nome. O produto entra na loja depois de ter variação ativa e ser ativado.
+         */
+        post: operations["AdminCreateProduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Produto com grade de variações e fotos (RF-051) */
+        get: operations["AdminGetProduct"];
+        /**
+         * Edita o produto (RF-051)
+         * @description Trocar o slug cria redirect 301 do antigo (RN-025). `version` diferente da atual → 409.
+         */
+        put: operations["AdminUpdateProduct"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Ativa ou desativa; ativar exige variação ativa (RN-023) */
+        patch: operations["AdminSetProductStatus"];
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}/variants/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cria as combinações que faltam na grade (RF-056)
+         * @description As combinações existentes ficam como estão. Listas vazias criam a variação única (RN-022).
+         */
+        post: operations["AdminGenerateVariants"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}/variants/{variantId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Edita SKU, preço, código de barras e medidas (RF-056)
+         * @description `price` nulo herda o preço base; medidas nulas herdam as do produto.
+         */
+        put: operations["AdminUpdateVariant"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}/variants/{variantId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Ativa ou desativa a variação (RN-023) */
+        patch: operations["AdminSetVariantStatus"];
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Envia uma foto: JPEG, PNG, WebP ou HEIC, até 15 MB (RF-061)
+         * @description Multipart com `file`, `alt` e `colorId` opcional. Um arquivo por requisição. Sai sem EXIF/GPS, em WebP.
+         */
+        post: operations["AdminUploadProductImage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}/images/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reordena a galeria de um acabamento; a primeira é a capa (RF-061) */
+        put: operations["AdminReorderProductImages"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}/images/{imageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Edita texto alternativo e acabamento da foto (RF-061) */
+        put: operations["AdminUpdateProductImage"];
+        post?: never;
+        /** Remove a foto; produto na loja não pode ficar sem nenhuma (RF-061) */
+        delete: operations["AdminDeleteProductImage"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/showcase/featured": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Peça em destaque da home; `isAvailable` falso avisa que a home mostra outra (RF-025) */
+        get: operations["AdminGetFeatured"];
+        /**
+         * Escolhe a peça em destaque e, se quiser, o acabamento (RF-025)
+         * @description `productId` nulo tira o destaque: a home passa a mostrar a novidade mais recente com estoque.
+         */
+        put: operations["AdminSetFeatured"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/occasions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Todas as ocasiões, de qualquer período (RF-025) */
+        get: operations["AdminListOccasions"];
+        put?: never;
+        /**
+         * Cria ocasião (RF-025)
+         * @description Período ativo sobreposto a outro → 409 (CA2). Datas inclusivas, no horário de Brasília (CA3).
+         */
+        post: operations["AdminCreateOccasion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/occasions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Edita ocasião, inclusive a lista ordenada de peças (RF-025)
+         * @description Período ativo sobreposto a outro → 409. `version` diferente da atual → 409.
+         */
+        put: operations["AdminUpdateOccasion"];
+        post?: never;
+        /** Exclui ocasião (RF-025) */
+        delete: operations["AdminDeleteOccasion"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/occasions/{id}/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Envia a imagem: JPEG, PNG, WebP ou HEIC, até 15 MB (RF-061) */
+        put: operations["AdminSetOccasionImage"];
+        post?: never;
+        /** Remove a imagem (RF-061) */
+        delete: operations["AdminRemoveOccasionImage"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Saldo por variação, com busca por nome, SKU ou código de barras (RF-052)
+         * @description `lowStock` traz só o que está à venda e no limite de estoque baixo ou abaixo dele.
+         */
+        get: operations["AdminListStock"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stock/{variantId}/movements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Histórico de movimentações da variação, da mais recente para a mais antiga (RF-052) */
+        get: operations["AdminListStockMovements"];
+        put?: never;
+        /**
+         * Entrada, saída ou ajuste, com motivo (RF-052)
+         * @description `type`: `In`, `Out` ou `Adjustment`. `quantity` é o que entra ou sai; em `Adjustment`, o novo saldo. Saldo negativo → 422 (CA1).
+         */
+        post: operations["AdminMoveStock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stock/scan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Entrada de estoque por leitura de código de barras (RF-059)
+         * @description Cada chamada soma de novo: é assim que se conta peça por peça. Dígito errado → 400. Código sem variação → 404 (`Catalog.BarcodeNotFound`).
+         */
+        post: operations["AdminScanStock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        CatalogFiltersResponse: {
-            colors: components["schemas"]["ColorResponse"][];
-            sizes: components["schemas"]["SizeResponse"][];
-            /** Format: double */
-            minPrice: number | null;
-            /** Format: double */
-            maxPrice: number | null;
-            categories: components["schemas"]["FilterCategoryResponse"][];
+        AddedResponse: {
+            /** Format: int32 */
+            added: number;
         };
-        FilterCategoryResponse: {
+        AddressRequest: {
+            recipient: null | string;
+            postalCode: null | string;
+            street: null | string;
+            number: null | string;
+            complement: null | string;
+            district: null | string;
+            city: null | string;
+            state: null | string;
+            /** @default false */
+            isDefault: boolean;
+        };
+        AddressResponse: {
             /** Format: uuid */
             id: string;
-            name: string;
-            slug: string;
+            recipient: string;
+            postalCode: string;
+            street: string;
+            number: string;
+            complement: null | string;
+            district: string;
+            city: string;
+            state: string;
+            isDefault: boolean;
         };
-        CollectionSummaryResponse: {
+        AdminCategoryResponse: {
             /** Format: uuid */
             id: string;
+            /** Format: uuid */
+            parentId: null | string;
             name: string;
             slug: string;
-            cardTheme: string;
+            description: string;
+            seoTitle: null | string;
+            seoDescription: null | string;
+            colorLabel: null | string;
+            sizeLabel: null | string;
+            isActive: boolean;
+            /** Format: int32 */
+            productCount: number;
+            /** Format: int32 */
+            version: number;
         };
-        CollectionDetailsResponse: {
+        AdminCollectionResponse: {
             /** Format: uuid */
             id: string;
             name: string;
             slug: string;
             description: string;
-            seo: components["schemas"]["SeoResponse"];
-            imageUrl: string | null;
+            seoTitle: null | string;
+            seoDescription: null | string;
             cardTheme: string;
+            /** Format: int32 */
+            position: number;
+            imageUrl: null | string;
+            isActive: boolean;
+            /** Format: int32 */
+            productCount: number;
+            /** Format: int32 */
+            version: number;
         };
-        FeaturedResponse: {
-            product: components["schemas"]["ProductSummaryResponse"];
+        AdminColorResponse: {
             /** Format: uuid */
-            colorId: string | null;
-            isFallback: boolean;
+            id: string;
+            name: string;
+            slug: string;
+            hex: string;
+            /** Format: int32 */
+            variantCount: number;
         };
-        OccasionResponse: {
+        AdminFeaturedResponse: {
+            /** Format: uuid */
+            productId: string;
+            productName: string;
+            /** Format: uuid */
+            colorId: null | string;
+            isAvailable: boolean;
+        };
+        AdminOccasionProductResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            imageUrl: null | string;
+            isActive: boolean;
+        };
+        AdminOccasionResponse: {
+            /** Format: uuid */
+            id: string;
             name: string;
             text: string;
-            imageUrl: string | null;
-            products: components["schemas"]["ProductSummaryResponse"][];
+            imageUrl: null | string;
+            /** Format: date */
+            startsOn: string;
+            /** Format: date */
+            endsOn: string;
+            isActive: boolean;
+            /** Format: int32 */
+            version: number;
+            products: components["schemas"]["AdminOccasionProductResponse"][];
         };
-        ShowcaseResponse: {
-            featured: components["schemas"]["FeaturedResponse"] | null;
-            occasion: components["schemas"]["OccasionResponse"] | null;
+        AdminProductImageResponse: {
+            /** Format: uuid */
+            id: string;
+            url: string;
+            alt: string;
+            /** Format: uuid */
+            colorId: null | string;
+            /** Format: int16 */
+            position: number;
+            /** Format: int32 */
+            width: null | number;
+            /** Format: int32 */
+            height: null | number;
+        };
+        AdminProductResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            categoryId: string;
+            name: string;
+            slug: string;
+            description: string;
+            /** Format: double */
+            basePrice: number;
+            /** Format: int32 */
+            weightGrams: number;
+            /** Format: double */
+            heightCm: number;
+            /** Format: double */
+            widthCm: number;
+            /** Format: double */
+            lengthCm: number;
+            seoTitle: null | string;
+            seoDescription: null | string;
+            isActive: boolean;
+            /** Format: int32 */
+            version: number;
+            variantLabels: components["schemas"]["VariantLabelsResponse"];
+            variants: components["schemas"]["AdminVariantResponse"][];
+            images: components["schemas"]["AdminProductImageResponse"][];
+            collectionIds: string[];
+        };
+        AdminProductSummaryResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            categoryName: string;
+            /** Format: double */
+            basePrice: number;
+            isActive: boolean;
+            /** Format: int32 */
+            variantCount: number;
+            /** Format: int32 */
+            imageCount: number;
+            imageUrl: null | string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        AdminSizeResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: int16 */
+            sortOrder: number;
+            /** Format: int32 */
+            variantCount: number;
+        };
+        AdminVariantResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            colorId: null | string;
+            colorName: null | string;
+            /** Format: uuid */
+            sizeId: null | string;
+            sizeName: null | string;
+            sku: string;
+            barcode: null | string;
+            /** Format: double */
+            price: null | number;
+            /** Format: int32 */
+            weightGrams: null | number;
+            /** Format: double */
+            heightCm: null | number;
+            /** Format: double */
+            widthCm: null | number;
+            /** Format: double */
+            lengthCm: null | number;
+            isActive: boolean;
+            /** Format: int32 */
+            quantityOnHand: number;
+        };
+        CartItemRequest: {
+            /** Format: uuid */
+            variantId: string;
+            /** Format: int32 */
+            quantity: number;
+        };
+        CartItemResponse: {
+            /** Format: uuid */
+            variantId: string;
+            /** Format: uuid */
+            productId: string;
+            productName: string;
+            productSlug: string;
+            colorName: null | string;
+            sizeName: null | string;
+            variantLabels: components["schemas"]["VariantLabelsResponse"];
+            imageUrl: null | string;
+            imageAlt: null | string;
+            /** Format: double */
+            unitPrice: number;
+            /** Format: int32 */
+            quantity: number;
+            /** Format: double */
+            lineTotal: number;
+            status: string;
+            /** Format: int32 */
+            availableQuantity: null | number;
+        };
+        CartLinesRequest: {
+            items: null | components["schemas"]["CartItemRequest"][];
+        };
+        CartQuantityRequest: {
+            /** Format: int32 */
+            quantity: number;
+        };
+        CartResponse: {
+            items: components["schemas"]["CartItemResponse"][];
+            /** Format: double */
+            subtotal: number;
+        };
+        CatalogFiltersResponse: {
+            colors: components["schemas"]["ColorResponse"][];
+            sizes: components["schemas"]["SizeResponse"][];
+            /** Format: double */
+            minPrice: null | number;
+            /** Format: double */
+            maxPrice: null | number;
+            categories: components["schemas"]["FilterCategoryResponse"][];
         };
         CategoryDetailsResponse: {
             /** Format: uuid */
@@ -173,9 +1629,16 @@ export interface components {
             seo: components["schemas"]["SeoResponse"];
             variantLabels: components["schemas"]["VariantLabelsResponse"];
         };
-        VariantLabelsResponse: {
-            color: string;
-            size: string;
+        CategoryRequest: {
+            /** Format: uuid */
+            parentId: null | string;
+            name: string;
+            slug: null | string;
+            description: null | string;
+            seoTitle: null | string;
+            seoDescription: null | string;
+            colorLabel: null | string;
+            sizeLabel: null | string;
         };
         CategorySummaryResponse: {
             /** Format: uuid */
@@ -189,11 +1652,84 @@ export interface components {
             currentPassword: string;
             newPassword: string;
         };
+        CollectionDetailsResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            description: string;
+            seo: components["schemas"]["SeoResponse"];
+            imageUrl: null | string;
+            cardTheme: string;
+        };
+        CollectionRequest: {
+            name: string;
+            slug: null | string;
+            description: null | string;
+            seoTitle: null | string;
+            seoDescription: null | string;
+            cardTheme: string;
+            /** Format: int32 */
+            position: number;
+        };
+        CollectionSummaryResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            cardTheme: string;
+        };
+        ColorRequest: {
+            name: string;
+            hex: string;
+        };
+        ColorResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            hex: string;
+        };
         ConfirmEmailRequest: {
             token: string;
         };
+        CreatedResponse: {
+            /** Format: uuid */
+            id: string;
+        };
+        FeaturedRequest: {
+            /** Format: uuid */
+            productId: null | string;
+            /** Format: uuid */
+            colorId: null | string;
+        };
+        FeaturedResponse: {
+            product: components["schemas"]["ProductSummaryResponse"];
+            /** Format: uuid */
+            colorId: null | string;
+            isFallback: boolean;
+        };
+        FilterCategoryResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+        };
         ForgotPasswordRequest: {
             email: string;
+        };
+        GenerateVariantsRequest: {
+            colorIds: null | string[];
+            sizeIds: null | string[];
+        };
+        GenerateVariantsResponse: {
+            /** Format: int32 */
+            created: number;
+        };
+        /** Format: binary */
+        IFormFile: string;
+        ImageUrlResponse: {
+            imageUrl: string;
         };
         LoginRequest: {
             email: string;
@@ -207,49 +1743,146 @@ export interface components {
             emailConfirmed: boolean;
             fullName: null | string;
         };
-        ProfileResponse: {
-            fullName: string;
-            email: string;
-            phone: null | string;
-            cpfMasked: null | string;
-            hasCpf: boolean;
-            emailConfirmed: boolean;
+        MergeCartResponse: {
+            cart: components["schemas"]["CartResponse"];
+            skippedVariantIds: string[];
         };
-        RegisterRequest: {
-            fullName: string;
-            email: string;
-            password: string;
-            phone: string;
-            cpf: null | string;
-        };
-        ResetPasswordRequest: {
-            token: string;
-            newPassword: string;
-        };
-        SessionResponse: {
-            accessToken: string;
-            /** Format: date-time */
-            expiresAt: string;
-            user: components["schemas"]["SessionUserResponse"];
-        };
-        SessionUserResponse: {
-            /** Format: uuid */
-            id: string;
-            email: string;
-            role: string;
-            emailConfirmed: boolean;
-        };
-        UpdateProfileRequest: {
-            fullName: string;
-            phone: string;
-            cpf: null | string;
-        };
-        ColorResponse: {
-            /** Format: uuid */
-            id: string;
+        OccasionRequest: {
             name: string;
-            slug: string;
-            hex: string;
+            text: null | string;
+            /** Format: date */
+            startsOn: string;
+            /** Format: date */
+            endsOn: string;
+            isActive: boolean;
+            productIds: null | string[];
+        };
+        OccasionResponse: {
+            name: string;
+            text: string;
+            imageUrl: null | string;
+            products: components["schemas"]["ProductSummaryResponse"][];
+        };
+        OrderAddressResponse: {
+            recipient: string;
+            postalCode: string;
+            street: string;
+            number: string;
+            complement: null | string;
+            district: string;
+            city: string;
+            state: string;
+        };
+        OrderGiftResponse: {
+            isGift: boolean;
+            wrap: boolean;
+            message: null | string;
+            /** Format: double */
+            wrapPrice: number;
+        };
+        OrderHistoryResponse: {
+            status: string;
+            /** Format: date-time */
+            changedAt: string;
+        };
+        OrderingSettingsRequest: {
+            /** Format: double */
+            giftWrapPrice: number;
+        };
+        OrderingSettingsResponse: {
+            /** Format: double */
+            giftWrapPrice: number;
+        };
+        OrderItemResponse: {
+            /** Format: uuid */
+            variantId: string;
+            /** Format: uuid */
+            productId: string;
+            sku: string;
+            productName: string;
+            colorName: null | string;
+            sizeName: null | string;
+            imageUrl: null | string;
+            /** Format: double */
+            unitPrice: number;
+            /** Format: int32 */
+            quantity: number;
+            /** Format: double */
+            lineTotal: number;
+        };
+        OrderResponse: {
+            /** Format: uuid */
+            id: string;
+            number: string;
+            status: string;
+            cancellationReason: null | string;
+            /** Format: date-time */
+            placedAt: string;
+            /** Format: date-time */
+            paymentDueAt: string;
+            items: components["schemas"]["OrderItemResponse"][];
+            /** Format: double */
+            subtotal: number;
+            /** Format: double */
+            shippingFee: number;
+            /** Format: double */
+            giftWrapPrice: number;
+            /** Format: double */
+            total: number;
+            shipping: components["schemas"]["OrderShippingResponse"];
+            address: components["schemas"]["OrderAddressResponse"];
+            gift: components["schemas"]["OrderGiftResponse"];
+            notes: null | string;
+            history: components["schemas"]["OrderHistoryResponse"][];
+            canCancel: boolean;
+        };
+        OrderShippingResponse: {
+            serviceCode: string;
+            name: string;
+            /** Format: double */
+            price: number;
+            /** Format: int32 */
+            deliveryDays: null | number;
+            isFallback: boolean;
+            trackingCode: null | string;
+        };
+        OrderSummaryResponse: {
+            /** Format: uuid */
+            id: string;
+            number: string;
+            status: string;
+            /** Format: date-time */
+            placedAt: string;
+            /** Format: date-time */
+            paymentDueAt: string;
+            /** Format: double */
+            total: number;
+            /** Format: int32 */
+            itemCount: number;
+            firstProductName: string;
+            firstImageUrl: null | string;
+        };
+        PagedResponseOfAdminProductSummaryResponse: {
+            items: components["schemas"]["AdminProductSummaryResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalItems: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
+        PagedResponseOfOrderSummaryResponse: {
+            items: components["schemas"]["OrderSummaryResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalItems: number;
+            /** Format: int32 */
+            totalPages: number;
         };
         PagedResponseOfProductSummaryResponse: {
             items: components["schemas"]["ProductSummaryResponse"][];
@@ -261,6 +1894,95 @@ export interface components {
             totalItems: number;
             /** Format: int32 */
             totalPages: number;
+        };
+        PagedResponseOfStockItemResponse: {
+            items: components["schemas"]["StockItemResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalItems: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
+        PagedResponseOfStockMovementResponse: {
+            items: components["schemas"]["StockMovementResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalItems: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
+        PayerDocumentRequest: {
+            type: null | string;
+            number: null | string;
+        };
+        PaymentOptionsResponse: {
+            canSimulate: boolean;
+            /** Format: int32 */
+            maxInstallments: number;
+        };
+        PaymentResponse: {
+            /** Format: uuid */
+            id: string;
+            method: string;
+            status: string;
+            statusDetail: null | string;
+            /** Format: double */
+            amount: number;
+            /** Format: int32 */
+            installments: null | number;
+            pixQrCode: null | string;
+            pixQrCodeBase64: null | string;
+            /** Format: date-time */
+            expiresAt: null | string;
+            orderStatus: string;
+            canSimulate: boolean;
+        };
+        PayOrderRequest: {
+            method: string;
+            cardToken: null | string;
+            paymentMethodId: null | string;
+            issuerId: null | string;
+            /** Format: int32 */
+            installments: null | number;
+            payerDocument: null | components["schemas"]["PayerDocumentRequest"];
+        };
+        PlacedOrderResponse: {
+            /** Format: uuid */
+            id: string;
+            number: string;
+            /** Format: double */
+            total: number;
+            /** Format: date-time */
+            paymentDueAt: string;
+            replayed: boolean;
+        };
+        PlaceOrderGiftRequest: {
+            wrap: boolean;
+            message: null | string;
+        };
+        PlaceOrderRequest: {
+            /** Format: uuid */
+            addressId: string;
+            shippingServiceCode: string;
+            notes: null | string;
+            gift: null | components["schemas"]["PlaceOrderGiftRequest"];
+        };
+        PostalAddress: {
+            postalCode: string;
+            street: string;
+            district: string;
+            city: string;
+            state: string;
+        };
+        PostalCodeRangeDto: {
+            from: string;
+            to: string;
         };
         ProblemDetails: {
             type?: null | string;
@@ -288,15 +2010,37 @@ export interface components {
             sizes: components["schemas"]["SizeResponse"][];
             variants: components["schemas"]["ProductVariantResponse"][];
             images: components["schemas"]["ProductImageResponse"][];
-            variantLabels: components["schemas"]["VariantLabelsResponse"];
             /** Format: date-time */
             updatedAt: string;
+            variantLabels: components["schemas"]["VariantLabelsResponse"];
+        };
+        ProductIdsRequest: {
+            productIds: string[];
         };
         ProductImageResponse: {
             url: string;
             alt: string;
             /** Format: uuid */
             colorId: null | string;
+        };
+        ProductRequest: {
+            /** Format: uuid */
+            categoryId: string;
+            name: string;
+            slug: null | string;
+            description: null | string;
+            /** Format: double */
+            basePrice: number;
+            /** Format: int32 */
+            weightGrams: number;
+            /** Format: double */
+            heightCm: number;
+            /** Format: double */
+            widthCm: number;
+            /** Format: double */
+            lengthCm: number;
+            seoTitle: null | string;
+            seoDescription: null | string;
         };
         ProductSummaryResponse: {
             /** Format: uuid */
@@ -322,9 +2066,149 @@ export interface components {
             gtin: null | string;
             available: boolean;
         };
+        ProfileResponse: {
+            fullName: string;
+            email: string;
+            phone: null | string;
+            cpfMasked: null | string;
+            hasCpf: boolean;
+            emailConfirmed: boolean;
+        };
+        RegisterRequest: {
+            fullName: string;
+            email: string;
+            password: string;
+            phone: string;
+            cpf: null | string;
+        };
+        ReorderProductImagesRequest: {
+            /** Format: uuid */
+            colorId: null | string;
+            imageIds: string[];
+        };
+        ResetPasswordRequest: {
+            token: string;
+            newPassword: string;
+        };
         SeoResponse: {
             title: string;
             description: string;
+        };
+        SessionResponse: {
+            accessToken: string;
+            /** Format: date-time */
+            expiresAt: string;
+            user: components["schemas"]["SessionUserResponse"];
+        };
+        SessionUserResponse: {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            role: string;
+            emailConfirmed: boolean;
+        };
+        ShippingOptionResponse: {
+            serviceCode: string;
+            name: string;
+            /** Format: double */
+            price: number;
+            /** Format: double */
+            originalPrice: number;
+            /** Format: int32 */
+            deliveryDays: null | number;
+            appliedRules: string[];
+        };
+        ShippingQuoteRequestItem: {
+            /** Format: uuid */
+            variantId: string;
+            /** Format: int32 */
+            quantity: number;
+        };
+        ShippingQuotesRequest: {
+            postalCode: null | string;
+            items: null | components["schemas"]["ShippingQuoteRequestItem"][];
+        };
+        ShippingQuotesResponse: {
+            options: components["schemas"]["ShippingOptionResponse"][];
+            isFallback: boolean;
+            /** Format: double */
+            freeShippingRemaining: null | number;
+        };
+        ShippingRuleRequest: {
+            name: string;
+            /** Format: int32 */
+            priority: number;
+            isActive: boolean;
+            /** Format: date */
+            validFrom: null | string;
+            /** Format: date */
+            validTo: null | string;
+            /** Format: double */
+            minSubtotal: null | number;
+            states: null | string[];
+            postalCodeRanges: null | components["schemas"]["PostalCodeRangeDto"][];
+            serviceCodes: null | string[];
+            effect: string;
+            /** Format: double */
+            effectValue: null | number;
+        };
+        ShippingRuleResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: int32 */
+            priority: number;
+            isActive: boolean;
+            /** Format: date */
+            validFrom: null | string;
+            /** Format: date */
+            validTo: null | string;
+            /** Format: double */
+            minSubtotal: null | number;
+            states: string[];
+            postalCodeRanges: components["schemas"]["PostalCodeRangeDto"][];
+            serviceCodes: string[];
+            effect: string;
+            /** Format: double */
+            effectValue: null | number;
+        };
+        ShippingSettingsRequest: {
+            originPostalCode: string;
+            /** Format: int32 */
+            handlingDays: number;
+            /** Format: double */
+            fallbackPacPrice: number;
+            /** Format: double */
+            fallbackSedexPrice: number;
+            /** Format: int32 */
+            boxWeightGrams: number;
+            /** Format: double */
+            boxHeightCm: number;
+            /** Format: double */
+            boxWidthCm: number;
+            /** Format: double */
+            boxLengthCm: number;
+        };
+        ShippingSettingsResponse: {
+            originPostalCode: string;
+            /** Format: int32 */
+            handlingDays: number;
+            /** Format: double */
+            fallbackPacPrice: number;
+            /** Format: double */
+            fallbackSedexPrice: number;
+            /** Format: int32 */
+            boxWeightGrams: number;
+            /** Format: double */
+            boxHeightCm: number;
+            /** Format: double */
+            boxWidthCm: number;
+            /** Format: double */
+            boxLengthCm: number;
+        };
+        ShowcaseResponse: {
+            featured: null | components["schemas"]["FeaturedResponse"];
+            occasion: null | components["schemas"]["OccasionResponse"];
         };
         SitemapEntryResponse: {
             slug: string;
@@ -336,10 +2220,149 @@ export interface components {
             products: components["schemas"]["SitemapEntryResponse"][];
             collections: components["schemas"]["SitemapEntryResponse"][];
         };
+        SizeRequest: {
+            name: string;
+            /** Format: int16 */
+            sortOrder: number;
+        };
         SizeResponse: {
             /** Format: uuid */
             id: string;
             name: string;
+        };
+        StatusRequest: {
+            isActive: boolean;
+        };
+        StockItemResponse: {
+            /** Format: uuid */
+            variantId: string;
+            /** Format: uuid */
+            productId: string;
+            productName: string;
+            imageUrl: null | string;
+            colorName: null | string;
+            sizeName: null | string;
+            sku: string;
+            barcode: null | string;
+            /** Format: int32 */
+            quantityOnHand: number;
+            /** Format: int32 */
+            lowStockThreshold: number;
+            isActive: boolean;
+        };
+        StockLevelResponse: {
+            /** Format: uuid */
+            variantId: string;
+            /** Format: int32 */
+            quantityOnHand: number;
+        };
+        StockMovementRequest: {
+            type: string;
+            /** Format: int32 */
+            quantity: number;
+            reason: string;
+        };
+        StockMovementResponse: {
+            /** Format: uuid */
+            id: string;
+            type: string;
+            /** Format: int32 */
+            quantity: number;
+            reason: null | string;
+            performedBy: null | string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        StockScanRequest: {
+            barcode: string;
+            /** Format: int32 */
+            quantity: null | number;
+            reason: null | string;
+        };
+        StockScanResponse: {
+            /** Format: uuid */
+            variantId: string;
+            /** Format: uuid */
+            productId: string;
+            productName: string;
+            colorName: null | string;
+            sizeName: null | string;
+            sku: string;
+            /** Format: int32 */
+            quantityOnHand: number;
+        };
+        UpdateCategoryRequest: {
+            /** Format: int32 */
+            version: number;
+            category: components["schemas"]["CategoryRequest"];
+        };
+        UpdateCollectionRequest: {
+            /** Format: int32 */
+            version: number;
+            collection: components["schemas"]["CollectionRequest"];
+        };
+        UpdateOccasionRequest: {
+            /** Format: int32 */
+            version: number;
+            occasion: components["schemas"]["OccasionRequest"];
+        };
+        UpdateProductImageRequest: {
+            alt: string;
+            /** Format: uuid */
+            colorId: null | string;
+        };
+        UpdateProductRequest: {
+            /** Format: int32 */
+            version: number;
+            product: components["schemas"]["ProductRequest"];
+        };
+        UpdateProfileRequest: {
+            fullName: string;
+            phone: string;
+            cpf: null | string;
+        };
+        UpdateVariantRequest: {
+            sku: string;
+            /** Format: double */
+            price: null | number;
+            barcode: null | string;
+            /** Format: int32 */
+            weightGrams: null | number;
+            /** Format: double */
+            heightCm: null | number;
+            /** Format: double */
+            widthCm: null | number;
+            /** Format: double */
+            lengthCm: null | number;
+        };
+        UploadedImageResponse: {
+            /** Format: uuid */
+            id: string;
+            url: string;
+            alt: string;
+            /** Format: uuid */
+            colorId: null | string;
+            /** Format: int16 */
+            position: number;
+            /** Format: int32 */
+            width: number;
+            /** Format: int32 */
+            height: number;
+        };
+        VariantByBarcodeResponse: {
+            /** Format: uuid */
+            variantId: string;
+            /** Format: uuid */
+            productId: string;
+            productName: string;
+            colorName: null | string;
+            sizeName: null | string;
+            sku: string;
+            barcode: string;
+        };
+        VariantLabelsResponse: {
+            color: string;
+            size: string;
         };
     };
     responses: never;
@@ -350,6 +2373,871 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    GetShippingQuotes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShippingQuotesRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShippingQuotesResponse"];
+                };
+            };
+        };
+    };
+    GetPostalAddress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cep: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostalAddress"];
+                };
+            };
+        };
+    };
+    AdminGetShippingSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShippingSettingsResponse"];
+                };
+            };
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminSaveShippingSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShippingSettingsRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminListShippingRules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShippingRuleResponse"][];
+                };
+            };
+        };
+    };
+    AdminCreateShippingRule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShippingRuleRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedResponse"];
+                };
+            };
+        };
+    };
+    AdminUpdateShippingRule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShippingRuleRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminDeleteShippingRule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PayOrder: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentResponse"];
+                };
+            };
+        };
+    };
+    GetCurrentPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentResponse"];
+                };
+            };
+        };
+    };
+    SimulatePaymentApproval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetPaymentOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentOptionsResponse"];
+                };
+            };
+        };
+    };
+    PaymentWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LookupCartVariants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CartLinesRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartResponse"];
+                };
+            };
+        };
+    };
+    AdminFindVariantByBarcode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VariantByBarcodeResponse"];
+                };
+            };
+        };
+    };
+    ListMyOrders: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseOfOrderSummaryResponse"];
+                };
+            };
+        };
+    };
+    PlaceOrder: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlaceOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlacedOrderResponse"];
+                };
+            };
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlacedOrderResponse"];
+                };
+            };
+        };
+    };
+    GetMyOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderResponse"];
+                };
+            };
+        };
+    };
+    CancelMyOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetOrderingSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderingSettingsResponse"];
+                };
+            };
+        };
+    };
+    AdminGetOrderingSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderingSettingsResponse"];
+                };
+            };
+        };
+    };
+    AdminSaveOrderingSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderingSettingsRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    Register: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionResponse"];
+                };
+            };
+        };
+    };
+    Login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionResponse"];
+                };
+            };
+        };
+    };
+    RefreshSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionResponse"];
+                };
+            };
+        };
+    };
+    Logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChangePassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionResponse"];
+                };
+            };
+        };
+    };
+    ForgotPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ResetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ConfirmEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmEmailRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ResendEmailConfirmation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeResponse"];
+                };
+            };
+        };
+    };
+    GetProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileResponse"];
+                };
+            };
+        };
+    };
+    UpdateProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ListAddresses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressResponse"][];
+                };
+            };
+        };
+    };
+    CreateAddress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddressRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressResponse"];
+                };
+            };
+        };
+    };
+    UpdateAddress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddressRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DeleteAddress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SetDefaultAddress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ListCategories: {
         parameters: {
             query?: never;
@@ -390,6 +3278,82 @@ export interface operations {
                     "application/json": components["schemas"]["CategoryDetailsResponse"];
                 };
             };
+            /** @description Moved Permanently */
+            301: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ListCollections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectionSummaryResponse"][];
+                };
+            };
+        };
+    };
+    GetCollectionBySlug: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectionDetailsResponse"];
+                };
+            };
+            /** @description Moved Permanently */
+            301: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetShowcase: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShowcaseResponse"];
+                };
+            };
         };
     };
     ListProducts: {
@@ -404,6 +3368,7 @@ export interface operations {
                 colors?: string[];
                 sizes?: string[];
                 sort?: string;
+                collection?: string;
             };
             header?: never;
             path?: never;
@@ -473,6 +3438,7 @@ export interface operations {
         parameters: {
             query?: {
                 category?: string;
+                collection?: string;
             };
             header?: never;
             path?: never;
@@ -507,6 +3473,1223 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SitemapResponse"];
+                };
+            };
+        };
+    };
+    GetCart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartResponse"];
+                };
+            };
+        };
+    };
+    ClearCart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AddCartItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CartItemRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartResponse"];
+                };
+            };
+        };
+    };
+    SetCartItemQuantity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                variantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CartQuantityRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartResponse"];
+                };
+            };
+        };
+    };
+    RemoveCartItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                variantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartResponse"];
+                };
+            };
+        };
+    };
+    MergeCart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CartLinesRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MergeCartResponse"];
+                };
+            };
+        };
+    };
+    AdminListColors: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminColorResponse"][];
+                };
+            };
+        };
+    };
+    AdminCreateColor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ColorRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedResponse"];
+                };
+            };
+        };
+    };
+    AdminUpdateColor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ColorRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminDeleteColor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminListSizes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminSizeResponse"][];
+                };
+            };
+        };
+    };
+    AdminCreateSize: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SizeRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedResponse"];
+                };
+            };
+        };
+    };
+    AdminUpdateSize: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SizeRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminDeleteSize: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminListCategories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCategoryResponse"][];
+                };
+            };
+        };
+    };
+    AdminCreateCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedResponse"];
+                };
+            };
+        };
+    };
+    AdminUpdateCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCategoryRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminDeleteCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminSetCategoryStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminListCollections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCollectionResponse"][];
+                };
+            };
+        };
+    };
+    AdminCreateCollection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CollectionRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedResponse"];
+                };
+            };
+        };
+    };
+    AdminUpdateCollection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCollectionRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminDeleteCollection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminSetCollectionStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminAddCollectionProducts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductIdsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddedResponse"];
+                };
+            };
+        };
+    };
+    AdminRemoveCollectionProducts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductIdsRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminSetCollectionImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    file: components["schemas"]["IFormFile"];
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImageUrlResponse"];
+                };
+            };
+        };
+    };
+    AdminRemoveCollectionImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminListProducts: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                search?: string;
+                categoryId?: string;
+                isActive?: boolean;
+                collectionId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseOfAdminProductSummaryResponse"];
+                };
+            };
+        };
+    };
+    AdminCreateProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedResponse"];
+                };
+            };
+        };
+    };
+    AdminGetProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminProductResponse"];
+                };
+            };
+        };
+    };
+    AdminUpdateProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProductRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminSetProductStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminGenerateVariants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerateVariantsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenerateVariantsResponse"];
+                };
+            };
+        };
+    };
+    AdminUpdateVariant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                variantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateVariantRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminSetVariantStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                variantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminUploadProductImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    file: components["schemas"]["IFormFile"];
+                } & {
+                    alt: string;
+                } & {
+                    /** Format: uuid */
+                    colorId?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadedImageResponse"];
+                };
+            };
+        };
+    };
+    AdminReorderProductImages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderProductImagesRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminUpdateProductImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                imageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProductImageRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminDeleteProductImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                imageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminGetFeatured: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminFeaturedResponse"];
+                };
+            };
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminSetFeatured: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeaturedRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminListOccasions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOccasionResponse"][];
+                };
+            };
+        };
+    };
+    AdminCreateOccasion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OccasionRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedResponse"];
+                };
+            };
+        };
+    };
+    AdminUpdateOccasion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateOccasionRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminDeleteOccasion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminSetOccasionImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    file: components["schemas"]["IFormFile"];
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImageUrlResponse"];
+                };
+            };
+        };
+    };
+    AdminRemoveOccasionImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminListStock: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                search?: string;
+                lowStock?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseOfStockItemResponse"];
+                };
+            };
+        };
+    };
+    AdminListStockMovements: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path: {
+                variantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseOfStockMovementResponse"];
+                };
+            };
+        };
+    };
+    AdminMoveStock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                variantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StockMovementRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockLevelResponse"];
+                };
+            };
+        };
+    };
+    AdminScanStock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StockScanRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockScanResponse"];
                 };
             };
         };

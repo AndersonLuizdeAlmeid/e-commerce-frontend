@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, Ref } from "react";
+import type { InputHTMLAttributes, Ref, SelectHTMLAttributes } from "react";
 
 interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -33,6 +33,42 @@ export function TextField({ label, name, error, hint, id, className, ...input }:
           {hint}
         </p>
       )}
+      {error && (
+        <p id={`${fieldId}-erro`} className="mt-1.5 text-sm text-alerta">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+interface SelectFieldProps extends SelectHTMLAttributes<HTMLSelectElement> {
+  label: string;
+  name: string;
+  error?: string | null;
+  ref?: Ref<HTMLSelectElement>;
+}
+
+/** Mesmo traço do TextField: rótulo em caixa alta, linha embaixo, erro ligado por aria-describedby. */
+export function SelectField({ label, name, error, children, id, className, ...select }: SelectFieldProps) {
+  const fieldId = id ?? `campo-${name}`;
+  return (
+    <div className={className}>
+      <label htmlFor={fieldId} className="block text-xs font-medium uppercase tracking-[0.16em]">
+        {label}
+      </label>
+      <select
+        id={fieldId}
+        name={name}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${fieldId}-erro` : undefined}
+        className={`mt-1 block min-h-11 w-full cursor-pointer border-b bg-transparent py-2 text-base focus-visible:shadow-[0_1px_0_0_currentColor] focus-visible:outline-none ${
+          error ? "border-alerta text-alerta" : "border-tinta/40 focus-visible:border-tinta"
+        }`}
+        {...select}
+      >
+        {children}
+      </select>
       {error && (
         <p id={`${fieldId}-erro`} className="mt-1.5 text-sm text-alerta">
           {error}
