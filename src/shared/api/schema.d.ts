@@ -101,6 +101,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Meus pedidos, mais recentes primeiro (RF-041) */
+        get: operations["ListMyOrders"];
+        put?: never;
+        /**
+         * Fecha o pedido com a sacola guardada na conta (RF-040, RF-047)
+         * @description Recalcula o frete e trava o estoque; peça sem saldo → 409 com `items`. Sacola vazia, endereço que não é do cliente ou e-mail não confirmado → 422. O cabeçalho `Idempotency-Key` repete a resposta do pedido já criado com a mesma chave (200) em vez de criar outro (CA7).
+         */
+        post: operations["PlaceOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Detalhe do pedido (RF-042)
+         * @description Pedido de outro cliente → 404.
+         */
+        get: operations["GetMyOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancela o pedido que ainda espera pagamento (RF-043)
+         * @description Devolve o estoque e envia o EM-10. Pedido já pago → 422 até a fatia de estornos.
+         */
+        post: operations["CancelMyOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Valor atual da embalagem para presente (RF-047 CA2) */
+        get: operations["GetOrderingSettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/ordering/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Valor da embalagem para presente */
+        get: operations["AdminGetOrderingSettings"];
+        /** Muda o valor da embalagem; pedidos já feitos não mudam (RF-047 CA2) */
+        put: operations["AdminSaveOrderingSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/register": {
         parameters: {
             query?: never;
@@ -1573,8 +1669,118 @@ export interface components {
             imageUrl: null | string;
             products: components["schemas"]["ProductSummaryResponse"][];
         };
+        OrderAddressResponse: {
+            recipient: string;
+            postalCode: string;
+            street: string;
+            number: string;
+            complement: null | string;
+            district: string;
+            city: string;
+            state: string;
+        };
+        OrderGiftResponse: {
+            isGift: boolean;
+            wrap: boolean;
+            message: null | string;
+            /** Format: double */
+            wrapPrice: number;
+        };
+        OrderHistoryResponse: {
+            status: string;
+            /** Format: date-time */
+            changedAt: string;
+        };
+        OrderingSettingsRequest: {
+            /** Format: double */
+            giftWrapPrice: number;
+        };
+        OrderingSettingsResponse: {
+            /** Format: double */
+            giftWrapPrice: number;
+        };
+        OrderItemResponse: {
+            /** Format: uuid */
+            variantId: string;
+            /** Format: uuid */
+            productId: string;
+            sku: string;
+            productName: string;
+            colorName: null | string;
+            sizeName: null | string;
+            imageUrl: null | string;
+            /** Format: double */
+            unitPrice: number;
+            /** Format: int32 */
+            quantity: number;
+            /** Format: double */
+            lineTotal: number;
+        };
+        OrderResponse: {
+            /** Format: uuid */
+            id: string;
+            number: string;
+            status: string;
+            cancellationReason: null | string;
+            /** Format: date-time */
+            placedAt: string;
+            /** Format: date-time */
+            paymentDueAt: string;
+            items: components["schemas"]["OrderItemResponse"][];
+            /** Format: double */
+            subtotal: number;
+            /** Format: double */
+            shippingFee: number;
+            /** Format: double */
+            giftWrapPrice: number;
+            /** Format: double */
+            total: number;
+            shipping: components["schemas"]["OrderShippingResponse"];
+            address: components["schemas"]["OrderAddressResponse"];
+            gift: components["schemas"]["OrderGiftResponse"];
+            notes: null | string;
+            history: components["schemas"]["OrderHistoryResponse"][];
+            canCancel: boolean;
+        };
+        OrderShippingResponse: {
+            serviceCode: string;
+            name: string;
+            /** Format: double */
+            price: number;
+            /** Format: int32 */
+            deliveryDays: null | number;
+            isFallback: boolean;
+            trackingCode: null | string;
+        };
+        OrderSummaryResponse: {
+            /** Format: uuid */
+            id: string;
+            number: string;
+            status: string;
+            /** Format: date-time */
+            placedAt: string;
+            /** Format: date-time */
+            paymentDueAt: string;
+            /** Format: double */
+            total: number;
+            /** Format: int32 */
+            itemCount: number;
+            firstProductName: string;
+            firstImageUrl: null | string;
+        };
         PagedResponseOfAdminProductSummaryResponse: {
             items: components["schemas"]["AdminProductSummaryResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalItems: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
+        PagedResponseOfOrderSummaryResponse: {
+            items: components["schemas"]["OrderSummaryResponse"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
@@ -1616,6 +1822,27 @@ export interface components {
             totalItems: number;
             /** Format: int32 */
             totalPages: number;
+        };
+        PlacedOrderResponse: {
+            /** Format: uuid */
+            id: string;
+            number: string;
+            /** Format: double */
+            total: number;
+            /** Format: date-time */
+            paymentDueAt: string;
+            replayed: boolean;
+        };
+        PlaceOrderGiftRequest: {
+            wrap: boolean;
+            message: null | string;
+        };
+        PlaceOrderRequest: {
+            /** Format: uuid */
+            addressId: string;
+            shippingServiceCode: string;
+            notes: null | string;
+            gift: null | components["schemas"]["PlaceOrderGiftRequest"];
         };
         PostalAddress: {
             postalCode: string;
@@ -2190,6 +2417,168 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ListMyOrders: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseOfOrderSummaryResponse"];
+                };
+            };
+        };
+    };
+    PlaceOrder: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlaceOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlacedOrderResponse"];
+                };
+            };
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlacedOrderResponse"];
+                };
+            };
+        };
+    };
+    GetMyOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderResponse"];
+                };
+            };
+        };
+    };
+    CancelMyOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetOrderingSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderingSettingsResponse"];
+                };
+            };
+        };
+    };
+    AdminGetOrderingSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderingSettingsResponse"];
+                };
+            };
+        };
+    };
+    AdminSaveOrderingSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderingSettingsRequest"];
+            };
+        };
         responses: {
             /** @description No Content */
             204: {
