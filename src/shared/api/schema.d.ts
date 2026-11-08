@@ -158,6 +158,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/payments/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Parcelas permitidas e se há simulação (só com a plataforma falsa) */
+        get: operations["GetPaymentOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/webhooks/payments/{provider}": {
         parameters: {
             query?: never;
@@ -1900,6 +1917,15 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
         };
+        PayerDocumentRequest: {
+            type: null | string;
+            number: null | string;
+        };
+        PaymentOptionsResponse: {
+            canSimulate: boolean;
+            /** Format: int32 */
+            maxInstallments: number;
+        };
         PaymentResponse: {
             /** Format: uuid */
             id: string;
@@ -1924,6 +1950,7 @@ export interface components {
             issuerId: null | string;
             /** Format: int32 */
             installments: null | number;
+            payerDocument: null | components["schemas"]["PayerDocumentRequest"];
         };
         PlacedOrderResponse: {
             /** Format: uuid */
@@ -2596,6 +2623,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    GetPaymentOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentOptionsResponse"];
+                };
             };
         };
     };

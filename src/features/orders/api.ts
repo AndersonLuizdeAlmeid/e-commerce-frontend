@@ -18,7 +18,11 @@ export interface PayRequest {
   paymentMethodId?: string;
   issuerId?: string | null;
   installments?: number;
+  /** Documento do titular, que o Brick pede (entrega 4 §3, P10). */
+  payerDocument?: { type: string; number: string } | null;
 }
+
+export type PaymentOptions = Schemas["PaymentOptionsResponse"];
 
 export interface PlaceOrderRequest {
   addressId: string;
@@ -48,5 +52,6 @@ export const ordersApi = {
   currentPayment: (id: string) => apiRequest<Payment>(`/api/v1/orders/${id}/payments/current`, { auth: true }),
   /** Só em desenvolvimento, com a plataforma falsa (entrega 4 §3, P3). */
   simulateApproval: (id: string) => apiRequest(`/api/v1/orders/${id}/payments/simulate-approval`, { method: "POST", auth: true }),
+  paymentOptions: () => apiRequest<PaymentOptions>("/api/v1/payments/options", { auth: true }),
   settings: () => apiRequest<Schemas["OrderingSettingsResponse"]>("/api/v1/orders/settings", { auth: true }),
 };

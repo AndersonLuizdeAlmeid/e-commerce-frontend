@@ -18,7 +18,7 @@ import { PaymentPanel } from "./PaymentPanel";
 const dateTime = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" });
 
 /** Detalhe do pedido (RF-042): situação, peças, entrega, presente, histórico e cancelamento (RF-043). */
-export function OrderDetail({ id }: { id: string }) {
+export function OrderDetail({ id, publicKey }: { id: string; publicKey: string | null }) {
   const { status } = useAuth();
   const router = useRouter();
   const isNew = useSearchParams().get("novo") === "1";
@@ -110,7 +110,7 @@ export function OrderDetail({ id }: { id: string }) {
         )}
       </section>
 
-      {pending && <PaymentPanel orderId={order.id} onConfirmed={() => void reload()} />}
+      {pending && <PaymentPanel orderId={order.id} amount={order.total} publicKey={publicKey} onConfirmed={() => void reload()} />}
 
       <section aria-labelledby="pecas" className="space-y-3">
         <h2 id="pecas" className="font-display text-xl leading-tight">
