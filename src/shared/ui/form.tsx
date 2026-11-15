@@ -95,7 +95,7 @@ export function FormAlert({ kind, children }: { kind: "error" | "success" | "inf
 
 /** Classes do botão principal (cartão tinta): também usadas em links que fazem papel de botão. */
 export const primaryButtonClass =
-  "inline-flex min-h-12 w-full items-center justify-center bg-tinta px-6 text-sm font-medium uppercase tracking-[0.18em] text-cartela transition-colors hover:bg-grafite disabled:opacity-60";
+  "botao botao-tinta w-full";
 
 export function SubmitButton({ pending, children }: { pending: boolean; children: React.ReactNode }) {
   return (

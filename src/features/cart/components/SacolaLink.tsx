@@ -13,7 +13,7 @@ export function SacolaLink() {
     <Link href="/carrinho" aria-label={label} className="relative grid size-11 place-items-center">
       <BagIcon />
       {count > 0 && (
-        <span aria-hidden="true" className="numeros absolute right-0 top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-tinta px-1 text-[11px] font-medium leading-none text-cartela">
+        <span aria-hidden="true" className="numeros absolute right-0 top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-tinta px-1 text-[11px] font-medium leading-none text-ouro-claro shadow-[inset_0_0_0_1px_rgb(201_162_107/0.6)]">
           {count > 99 ? "99+" : count}
         </span>
       )}

@@ -1,36 +1,46 @@
 @import "tailwindcss";
 
 /*
- * Mundo "Cartela na vitrine rosé" (specs/26 §2, revisado com a cliente em 29/10/2026). Tintas fixas: vitrine
- * (rosé claro), cartela (marfim), folha (dourado) e tinta, mais grafite/prata da linha masculina. A folha só marca
- * o que está selecionado ou ativo e nunca carrega texto sobre a cartela.
+ * Mundo "Vitrine de cetim" (o da prévia versao-a5, que as clientes aprovaram; fixado pelo dono em 11/11/2026).
+ * Cetim blush/champanhe com reflexos suaves, faixas nude, pérola nas molduras e superfícies elevadas, tinta preta
+ * suave e ouro como fio e luz. O ouro-tinta é o único dourado que carrega texto. Grafite/prata seguem na linha "Eles".
+ * Os nomes dos tokens (vitrine, cartela, folha) vêm do mundo anterior e continuam valendo nas telas já construídas.
  */
 @theme {
   --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
   /* Prata: Didone desenhada para tela; os traços finos não somem no fundo claro como os da Bodoni. */
   --font-display: var(--font-prata), "Didot", "Bodoni 72", serif;
 
-  --color-tinta: #1a1a17;
-  /* Texto secundário sobre a cartela (6,2:1) e sobre a vitrine (4,9:1). */
-  --color-tinta-suave: #5b574e;
-  --color-cartela: #f4eee3;
-  --color-linha: #d9d0c0;
+  --color-tinta: #1e1a18;
+  /* Marrom quente do texto secundário: 8,2:1 sobre a pérola, 7,3:1 sobre o cetim, 6,2:1 sobre o nude. */
+  --color-tinta-suave: #5a4337;
+  /* Pérola: corpo das telas de leitura, molduras e superfícies elevadas. */
+  --color-cartela: #faf3ee;
+  --color-linha: #e3d4c8;
 
-  --color-vitrine: #e9cfcb;
-  /* Rosé mais fundo: barra fixa do celular, pontos das etiquetas e realces sobre a vitrine. */
-  --color-vitrine-funda: #d4b2ad;
-  /* Texto sobre a vitrine: principal (11,8:1) e secundário (5,9:1). */
-  --color-vitrine-tinta: #1a1a17;
-  --color-vitrine-texto: #5a4746;
+  /* Cetim (fundo das vitrines) e nude (faixas alternadas, barra do polegar). */
+  --color-vitrine: #f3e6dc;
+  --color-vitrine-funda: #e8d3c5;
+  --color-vitrine-tinta: #1e1a18;
+  --color-vitrine-texto: #5a4337;
+  /* Rosé profundo: fundo das fotos enquanto carregam. */
+  --color-rose: #dcc0ae;
 
-  /* Folha sobre a cartela (indicador e marca, 3,5:1) e folha de estado sobre a vitrine (3,9:1; marfim nela: 5:1). */
+  /* Ouro: a estrela do logo, fios e luz (nunca texto). Ouro-claro só sobre a tinta. */
+  --color-ouro: #c9a26b;
+  --color-ouro-claro: #e4c690;
+  /* Ouro-tinta: links, rótulos e ícones finos (6,3:1 sobre o cetim, 5,4:1 sobre o nude). */
+  --color-ouro-tinta: #6e5029;
+  --color-ouro-fundo: #4f3a1e;
+
+  /* Estado selecionado/ativo: folha sobre a pérola (indicador) e ouro-tinta sobre o cetim. */
   --color-folha: #9c7a3c;
-  --color-folha-vitrine: #7e6128;
+  --color-folha-vitrine: #6e5029;
 
-  --color-grafite: #2e2e2c;
+  --color-grafite: #2e2622;
   --color-prata: #c9cccf;
 
-  /* Única cor fora do mundo, decidida uma vez: erro (7,4:1 sobre a cartela). */
+  /* Única cor fora do mundo, decidida uma vez: erro (7,6:1 sobre a pérola). */
   --color-alerta: #8a2c1f;
 
   --ease-solta: cubic-bezier(0.16, 1, 0.3, 1);
@@ -39,21 +49,25 @@
 /* Base e componentes ficam em camadas para os utilitários do Tailwind (ex.: outline-none) prevalecerem. */
 @layer base {
   :root {
-    --foco: var(--color-tinta);
+    --foco: var(--color-ouro-tinta);
+    /* Sombras: marrom quente, nunca preto. */
+    --sombra: 74 55 45;
+    --fio-ouro: rgb(110 80 41 / 0.34);
     color-scheme: light;
     accent-color: var(--color-tinta);
-    scrollbar-color: color-mix(in srgb, var(--color-tinta) 35%, transparent) transparent;
+    scrollbar-color: #8e6f44 transparent;
+    scrollbar-width: thin;
   }
 
   body {
     background: var(--color-cartela);
     color: var(--color-tinta);
-    caret-color: var(--color-tinta);
+    caret-color: var(--color-ouro-tinta);
   }
 
   ::selection {
-    background: var(--color-tinta);
-    color: var(--color-cartela);
+    background: var(--color-ouro-claro);
+    color: var(--color-tinta);
   }
 
   :focus-visible {
@@ -62,28 +76,43 @@
   }
 
   a {
-    text-underline-offset: 0.2em;
+    text-underline-offset: 0.28em;
     text-decoration-thickness: 1px;
   }
 }
 
 @layer components {
-  /* A vitrine: fundo rosé com uma trama fraca de papel, sem gradiente de cor. */
+  /*
+   * O cetim: grão fino quente e dois reflexos grandes e suaves, como o fundo do logo. Os reflexos são luz sobre o
+   * tecido, não gradiente de cor.
+   */
   .vitrine {
-    --foco: var(--color-vitrine-tinta);
+    --foco: var(--color-ouro-tinta);
     background-color: var(--color-vitrine);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .36 0 0 0 0 .26 0 0 0 0 .2 0 0 0 .055 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+      radial-gradient(58% 46% at 24% 12%, rgb(255 251 248 / 0.66), rgb(255 251 248 / 0) 70%),
+      radial-gradient(46% 40% at 84% 82%, rgb(255 249 244 / 0.44), rgb(255 249 244 / 0) 70%);
     color: var(--color-vitrine-tinta);
   }
 
-  /* Superfícies de cartela dentro da vitrine. */
+  /* Faixa nude com a luz quente de vitrine vindo de cima (as prateleiras por linha). */
+  .vitrine-nude {
+    --foco: var(--color-ouro-tinta);
+    background:
+      radial-gradient(60% 50% at 50% 0%, rgb(255 250 245 / 0.6), rgb(255 250 245 / 0) 70%),
+      linear-gradient(to bottom, var(--color-vitrine), var(--color-vitrine-funda) 22%, var(--color-vitrine-funda) 80%, var(--color-vitrine));
+    color: var(--color-vitrine-tinta);
+  }
+
+  /* Superfícies pérola dentro da vitrine. */
   .cartela {
-    --foco: var(--color-tinta);
+    --foco: var(--color-ouro-tinta);
     background-color: var(--color-cartela);
     color: var(--color-tinta);
   }
 
-  /* A cartela da linha masculina: grafite com folha prateada (specs/26 §2.2). Marfim sobre ela, 11:1; prata, 8:1. */
+  /* A superfície da linha masculina: grafite com fio prateado. Pérola sobre ela, 13:1; prata, 9:1. */
   .cartela-grafite {
     --foco: var(--color-prata);
     background-color: var(--color-grafite);
@@ -95,8 +124,419 @@
   }
 
   /*
-   * Brilho de folha (specs/26 §2.5): a cartela inclina na direção do ponteiro e uma luz passa por ela, como
-   * sobre metal. O componente `Brilho` atualiza --rx, --ry, --mx e --my; sem ponteiro fica tudo parado.
+   * Botões. O principal é a tinta do logo com um fio de ouro por dentro e sombra quente; sobe e acende ao apontar,
+   * e um reflexo atravessa o metal. O secundário é o fio de ouro sobre pérola translúcida.
+   */
+  .botao {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    min-height: 3rem;
+    padding: 0.7rem 1.5rem;
+    overflow: hidden;
+    border-radius: 999px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color 350ms var(--ease-solta),
+      color 350ms,
+      border-color 350ms,
+      transform 350ms var(--ease-solta),
+      box-shadow 350ms;
+  }
+
+  .botao:active {
+    transform: translateY(0);
+  }
+
+  .botao:disabled,
+  .botao[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.5;
+    transform: none;
+  }
+
+  .botao-tinta {
+    background: var(--color-tinta);
+    color: var(--color-vitrine);
+    box-shadow:
+      inset 0 0 0 1px rgb(201 162 107 / 0.55),
+      0 12px 26px -14px rgb(var(--sombra) / 0.55);
+  }
+
+  .botao-tinta svg {
+    color: var(--color-ouro-claro);
+  }
+
+  /* O reflexo que atravessa o botão. */
+  .botao-tinta::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(105deg, rgb(255 255 255 / 0) 38%, rgb(255 244 224 / 0.22) 50%, rgb(255 255 255 / 0) 62%);
+    transform: translateX(-110%);
+    transition: transform 900ms var(--ease-solta);
+  }
+
+  .botao-tinta:hover:not(:disabled) {
+    background: var(--color-grafite);
+    color: var(--color-cartela);
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 0 0 1px rgb(228 198 144 / 0.9),
+      0 18px 32px -16px rgb(var(--sombra) / 0.6);
+  }
+
+  .botao-tinta:hover:not(:disabled)::after {
+    transform: translateX(110%);
+  }
+
+  .botao-fio {
+    border: 1px solid var(--fio-ouro);
+    background: rgb(250 243 238 / 0.4);
+    color: var(--color-tinta);
+  }
+
+  .botao-fio:hover:not(:disabled) {
+    border-color: var(--color-ouro-tinta);
+    background: rgb(250 243 238 / 0.85);
+    color: var(--color-ouro-fundo);
+  }
+
+  .botao-pequeno {
+    min-height: 2.75rem;
+    padding: 0.5rem 1.15rem;
+    font-size: 0.875rem;
+  }
+
+  /* Controle redondo (setas, pausa, fechar). */
+  .controle {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--fio-ouro);
+    border-radius: 50%;
+    background: rgb(250 243 238 / 0.82);
+    color: var(--color-ouro-tinta);
+    cursor: pointer;
+    transition:
+      border-color 300ms,
+      color 300ms,
+      background-color 300ms,
+      transform 300ms var(--ease-solta);
+  }
+
+  .controle:hover:not(:disabled) {
+    border-color: var(--color-ouro-tinta);
+    background: var(--color-cartela);
+    color: var(--color-ouro-fundo);
+  }
+
+  .controle:disabled {
+    cursor: default;
+    opacity: 0.35;
+  }
+
+  /* Link de texto em ouro-tinta, com o fio que escurece. */
+  .link-ouro {
+    color: var(--color-ouro-tinta);
+    text-decoration: underline;
+    text-decoration-color: var(--fio-ouro);
+    transition:
+      color 300ms,
+      text-decoration-color 300ms;
+  }
+
+  .link-ouro:hover {
+    color: var(--color-ouro-fundo);
+    text-decoration-color: currentColor;
+  }
+
+  /*
+   * A peça sob a luz: foto 4:5 numa moldura de passe-partout pérola com fio de ouro e sombra quente longa. Ao
+   * apontar, a foto aproxima, uma luz quente acende por cima e o fio vira ouro cheio. A moldura inteira vira para
+   * mostrar acabamento, tamanho e sacola (comprar sem sair da grade).
+   */
+  .peca {
+    --mold: var(--color-cartela);
+    --mold-fio: var(--fio-ouro);
+    --mold-fio-vivo: var(--color-ouro);
+  }
+
+  .peca[data-tema="grafite"] {
+    --mold: var(--color-grafite);
+    --mold-fio: rgb(201 204 207 / 0.5);
+    --mold-fio-vivo: var(--color-prata);
+  }
+
+  .peca-palco {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    margin: 6px;
+    perspective: 1400px;
+  }
+
+  .peca-miolo {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transition: transform 800ms var(--ease-solta);
+  }
+
+  .peca[data-virada="true"] .peca-miolo {
+    transform: rotateY(180deg);
+  }
+
+  .peca-face {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: 2px;
+    backface-visibility: hidden;
+    box-shadow:
+      0 0 0 5px var(--mold),
+      0 0 0 6px var(--mold-fio),
+      0 30px 50px -30px rgb(var(--sombra) / 0.55);
+    transition: box-shadow 500ms var(--ease-solta);
+  }
+
+  .peca-frente {
+    background:
+      radial-gradient(70% 55% at 50% -5%, rgb(255 252 248 / 0.7), rgb(255 252 248 / 0) 70%),
+      linear-gradient(to bottom, var(--color-cartela), var(--color-vitrine-funda));
+  }
+
+  /* O filete interno e a luz quente da vitrine. */
+  .peca-frente::before {
+    content: "";
+    position: absolute;
+    inset: 9px;
+    z-index: 1;
+    border: 1px solid rgb(250 243 238 / 0.55);
+    opacity: 0.7;
+    pointer-events: none;
+    transition: opacity 500ms;
+  }
+
+  .peca-frente::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+    background: radial-gradient(62% 52% at 50% 24%, rgb(255 250 242 / 0.3), rgb(255 250 242 / 0) 70%);
+    transition: opacity 600ms var(--ease-solta);
+  }
+
+  .peca-foto {
+    filter: saturate(0.92) contrast(1.02);
+    transform: scale(1.001);
+    transition:
+      transform 1200ms var(--ease-solta),
+      filter 800ms var(--ease-solta);
+  }
+
+  .peca:hover .peca-foto,
+  .peca:focus-within .peca-foto {
+    filter: sepia(0.06) saturate(1) contrast(1.04) brightness(1.04);
+    transform: scale(1.045);
+  }
+
+  .peca:hover .peca-face,
+  .peca:focus-within .peca-face {
+    box-shadow:
+      0 0 0 5px var(--mold),
+      0 0 0 6px var(--mold-fio-vivo),
+      0 38px 60px -30px rgb(var(--sombra) / 0.6);
+  }
+
+  .peca:hover .peca-frente::before,
+  .peca:hover .peca-frente::after,
+  .peca:focus-within .peca-frente::before,
+  .peca:focus-within .peca-frente::after {
+    opacity: 1;
+  }
+
+  .peca-verso {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    background:
+      radial-gradient(90% 50% at 50% 0%, rgb(255 255 255 / 0.7), rgb(255 255 255 / 0) 70%),
+      var(--color-cartela);
+    color: var(--color-tinta);
+    transform: rotateY(180deg);
+  }
+
+  /* Peça em cena (abertura): a foto se dissolve no cetim, a luz fica na peça. */
+  .cena {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  .cena-midia {
+    position: absolute;
+    inset: 0 0 auto 0;
+    z-index: -2;
+    height: min(58svh, 30rem);
+    mask-image: linear-gradient(to bottom, #000 62%, transparent);
+  }
+
+  .cena-foto {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 1600ms var(--ease-solta);
+  }
+
+  .cena-foto[data-ativa="true"] {
+    opacity: 1;
+  }
+
+  .cena-foto img {
+    filter: sepia(0.14) saturate(0.84) brightness(1.03) contrast(1.02);
+  }
+
+  /* A foto ativa aproxima devagar enquanto está em cena. */
+  .cena-foto[data-ativa="true"] img {
+    animation: cena-aproxima 9s var(--ease-solta) both;
+  }
+
+  .cena-luz {
+    position: absolute;
+    inset: 0 0 auto 0;
+    z-index: -1;
+    height: min(58svh, 30rem);
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 50% 42%, rgb(255 250 244 / 0.3) 0, rgb(255 250 244 / 0.08) 22%, rgb(255 250 244 / 0) 38%),
+      linear-gradient(to bottom, rgb(243 230 220 / 0) 55%, rgb(243 230 220 / 0.9) 88%, var(--color-vitrine) 100%);
+  }
+
+  @media (min-width: 1024px) {
+    .cena-midia {
+      inset: 0 0 0 auto;
+      width: 68%;
+      height: auto;
+      mask-image: linear-gradient(to right, transparent 0, transparent 6%, #000 48%), linear-gradient(to bottom, #000 86%, transparent);
+      mask-composite: intersect;
+    }
+
+    .cena-luz {
+      inset: 0;
+      height: auto;
+      background:
+        radial-gradient(circle at 68% 46%, rgb(255 250 244 / 0.3) 0, rgb(255 250 244 / 0.08) 16%, rgb(255 250 244 / 0) 30%),
+        radial-gradient(ellipse 60% 64% at 0% 100%, rgb(243 230 220 / 0.9) 0, rgb(243 230 220 / 0.6) 50%, rgb(243 230 220 / 0) 100%);
+    }
+  }
+
+  /* Faixa das linhas: passa devagar, para com o ponteiro, o foco ou o botão de pausa. */
+  .faixa {
+    overflow: clip;
+    mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+  }
+
+  .faixa-trilho {
+    animation: faixa-corre var(--faixa-duracao, 40s) linear infinite;
+  }
+
+  .faixa:hover .faixa-trilho,
+  .faixa:focus-within .faixa-trilho,
+  .faixa[data-pausado] .faixa-trilho {
+    animation-play-state: paused;
+  }
+
+  .faixa-chip {
+    box-shadow:
+      0 0 0 3px var(--color-cartela),
+      0 0 0 4px var(--fio-ouro),
+      0 14px 26px -14px rgb(var(--sombra) / 0.55);
+  }
+
+  /* Prateleira: trilho que desliza de lado, com encaixe por peça. */
+  .trilho {
+    display: flex;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .trilho::-webkit-scrollbar {
+    display: none;
+  }
+
+  .trilho > * {
+    flex: none;
+    scroll-snap-align: start;
+  }
+
+  /* Painéis (medidor de aro): sobem do pé no celular, entram pelo centro no desktop. */
+  .painel {
+    transition:
+      translate 420ms var(--ease-solta),
+      opacity 420ms var(--ease-solta),
+      overlay 420ms allow-discrete,
+      display 420ms allow-discrete;
+    translate: 0 2rem;
+    opacity: 0;
+  }
+
+  .painel[open] {
+    translate: 0 0;
+    opacity: 1;
+  }
+
+  @starting-style {
+    .painel[open] {
+      translate: 0 2rem;
+      opacity: 0;
+    }
+  }
+
+  .painel::backdrop {
+    background: rgb(30 26 24 / 0.5);
+    backdrop-filter: blur(3px);
+    transition:
+      opacity 420ms var(--ease-solta),
+      overlay 420ms allow-discrete,
+      display 420ms allow-discrete;
+    opacity: 0;
+  }
+
+  .painel[open]::backdrop {
+    opacity: 1;
+  }
+
+  @starting-style {
+    .painel[open]::backdrop {
+      opacity: 0;
+    }
+  }
+
+  /* Controle deslizante do medidor. */
+  .deslizante {
+    width: 100%;
+    height: 2.75rem;
+    accent-color: var(--color-ouro-tinta);
+    cursor: pointer;
+  }
+
+  /*
+   * Brilho de folha (página do produto): a superfície inclina na direção do ponteiro e uma luz passa por ela.
+   * O componente `Brilho` atualiza --rx, --ry, --mx e --my; sem ponteiro fica tudo parado.
    */
   .brilho {
     transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
@@ -114,9 +554,24 @@
   }
 }
 
+@keyframes cena-aproxima {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes faixa-corre {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 /*
- * Sem mouse (celular), a luz passa uma vez pela cartela quando ela entra na tela, levada pela rolagem
- * (specs/26 §2.5: "no toque, a luz aparece sem inclinar"). Onde não há animação por rolagem, a luz não aparece.
+ * Sem mouse (celular), a luz passa uma vez pela superfície quando ela entra na tela, levada pela rolagem.
+ * Onde não há animação por rolagem, a luz não aparece.
  */
 @property --mx {
   syntax: "<percentage>";
@@ -152,19 +607,19 @@
   }
 }
 
-/* Com movimento reduzido, a luz por rolagem vira só um pulso de opacidade, sem atravessar a cartela. */
+/* Com movimento reduzido, a luz por rolagem vira só um pulso de opacidade, sem atravessar a superfície. */
 @media (hover: none) and (prefers-reduced-motion: reduce) {
   .brilho-luz {
     animation-name: brilho-pulsa;
   }
 }
 
-/* Etiqueta com ponta (navegação e filtros): o recorte fica num elemento interno para não cortar o anel de foco. */
+/* Etiqueta com ponta (filtros): o recorte fica num elemento interno para não cortar o anel de foco. */
 .etiqueta-ponta {
   clip-path: polygon(0.625rem 0, 100% 0, 100% 100%, 0.625rem 100%, 0 50%);
 }
 
-/* Virar a cartela na página do produto (specs/26 §2.5). */
+/* Virar a superfície na página do produto. */
 .virar {
   perspective: 1600px;
 }
@@ -192,6 +647,10 @@
   transform: rotateY(180deg);
 }
 
+/*
+ * Decisão da MO (rodadas A4/A5): o movimento vale para todos. Com "reduzir movimento" ele fica mais lento e sem
+ * aproximação nem inclinação; o que é contínuo (faixa, peça em cena) tem pausa à vista.
+ */
 @media (prefers-reduced-motion: reduce) {
   .brilho {
     transform: none !important;
@@ -200,5 +659,57 @@
   .virar-miolo,
   .virar-miolo * {
     transition: none !important;
+  }
+
+  .peca-miolo {
+    transition-duration: 1200ms;
+  }
+
+  .peca:hover .peca-foto,
+  .peca:focus-within .peca-foto {
+    transform: scale(1.001);
+  }
+
+  .cena-foto {
+    transition-duration: 2600ms;
+  }
+
+  .cena-foto[data-ativa="true"] img {
+    animation: none;
+  }
+
+  .botao-tinta:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* Prateleira que sangra até a borda da tela, alinhada à coluna de 72rem na primeira peça. */
+.trilho-sangra {
+  --borda: max(1rem, calc((100vw - 72rem) / 2 + 1rem));
+  padding-inline: var(--borda);
+  scroll-padding-inline: var(--borda);
+}
+
+/* A legenda da peça em cena entra de leve a cada troca. */
+.cena-legenda {
+  animation: cena-entra 900ms var(--ease-solta) both;
+}
+
+@keyframes cena-entra {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cena-legenda {
+    animation-duration: 1400ms;
+  }
+
+  @keyframes cena-entra {
+    from {
+      opacity: 0;
+    }
   }
 }

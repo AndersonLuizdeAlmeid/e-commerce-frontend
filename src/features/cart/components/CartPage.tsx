@@ -135,7 +135,7 @@ export function CartPage() {
           <div className={`cartela mx-auto mt-8 max-w-sm rounded-[3px] px-6 pb-8 pt-8 text-center ${sombraCartela}`}>
             <BagIcon aria-hidden="true" className="mx-auto size-16 text-tinta-suave [stroke-width:1]" />
             <p className="mt-4 font-display text-2xl leading-snug text-balance">Sua sacola está vazia.</p>
-            <Link href="/" className="mt-5 inline-flex min-h-11 items-center bg-tinta px-6 pt-0.5 text-sm font-medium uppercase tracking-[0.18em] text-cartela transition-colors hover:bg-grafite">
+            <Link href="/" className="botao botao-tinta mt-5">
               Ver novidades
             </Link>
           </div>
@@ -172,11 +172,11 @@ export function CartPage() {
               {blocked ? (
                 <p className="mt-5 text-sm font-medium">Ajuste as peças destacadas para seguir.</p>
               ) : mode === "local" && user?.role !== "Admin" ? (
-                <Link href="/login?next=/checkout" className="mt-5 flex min-h-12 items-center justify-center bg-tinta px-4 pt-0.5 text-sm font-medium uppercase tracking-[0.18em] text-cartela transition-colors hover:bg-grafite">
+                <Link href="/login?next=/checkout" className="botao botao-tinta mt-5 w-full">
                   Finalizar compra
                 </Link>
               ) : (
-                <button type="button" onClick={checkout} className="mt-5 flex min-h-12 w-full items-center justify-center bg-tinta px-4 pt-0.5 text-sm font-medium uppercase tracking-[0.18em] text-cartela transition-colors hover:bg-grafite">
+                <button type="button" onClick={checkout} className="botao botao-tinta mt-5 w-full">
                   Finalizar compra
                 </button>
               )}
