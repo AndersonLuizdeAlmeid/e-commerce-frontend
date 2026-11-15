@@ -108,6 +108,19 @@ export function OrderDetail({ id, publicKey }: { id: string; publicKey: string |
             cancelado e as peças voltam para a loja.
           </p>
         )}
+        {order.shipping.trackingCode && (
+          <p className="mt-2 text-sm">
+            Código de rastreio <span className="numeros font-medium">{order.shipping.trackingCode}</span>
+            {order.shipping.trackingUrl && (
+              <>
+                {" · "}
+                <a href={order.shipping.trackingUrl} target="_blank" rel="noreferrer" className="underline">
+                  Acompanhar a entrega
+                </a>
+              </>
+            )}
+          </p>
+        )}
       </section>
 
       {pending && <PaymentPanel orderId={order.id} amount={order.total} publicKey={publicKey} onConfirmed={() => void reload()} />}

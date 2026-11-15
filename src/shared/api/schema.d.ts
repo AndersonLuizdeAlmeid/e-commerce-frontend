@@ -215,6 +215,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Indicadores do período e o que espera a loja agora (RF-055)
+         * @description `from`/`to`: dias (AAAA-MM-DD) no horário de Brasília; sem datas, os últimos 30 dias. Faturamento = pagamentos aprovados no período que continuam aprovados; o estornado vem à parte.
+         */
+        get: operations["AdminDashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/variants/by-barcode/{code}": {
         parameters: {
             query?: never;
@@ -831,6 +851,143 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/payments/refunds/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dinheiro preso: estorno recusado, estorno que não saiu e pagamento manual de pedido cancelado
+         * @description `kind`: `RefundFailed`, `RefundNotDone` ou `ManualPayment`. `actions` diz o que vale para cada linha.
+         */
+        get: operations["AdminListPendingRefunds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/payments/{id}/refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pede o estorno de novo pelo Outbox
+         * @description Pagamento fora da fila → 422 `Payments.NothingToRefund`.
+         */
+        post: operations["AdminRetryRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/payments/{id}/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Consulta a plataforma: estorno feito pelo painel do Mercado Pago tira o pagamento da fila */
+        post: operations["AdminSyncPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/payments/{id}/mark-refunded": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * A loja devolveu à mão um pagamento confirmado à mão; manda o EM-13
+         * @description Só para pagamento `Manual` (422 `Payments.ManualOnly` nos outros). `note` diz como foi devolvido.
+         */
+        post: operations["AdminMarkPaymentRefunded"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Usuários, mais recentes primeiro (RF-054)
+         * @description `role`: `Customer` ou `Admin`. `search`: nome ou e-mail.
+         */
+        get: operations["AdminListUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Ativa ou desativa a conta; desativar encerra as sessões na hora
+         * @description A própria conta → 422 `Identity.CannotChangeSelf` (CA1). A última administradora ativa → 422 `Identity.LastAdmin` (CA2).
+         */
+        patch: operations["AdminSetUserStatus"];
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Promove ou rebaixa; as sessões caem para o papel novo valer
+         * @description `role`: `Customer` ou `Admin`. Mesmas regras do status (CA1, CA2).
+         */
+        patch: operations["AdminSetUserRole"];
+        trace?: never;
+    };
     "/api/v1/admin/colors": {
         parameters: {
             query?: never;
@@ -1052,6 +1209,174 @@ export interface paths {
         post?: never;
         /** Remove a capa (RF-061) */
         delete: operations["AdminRemoveCollectionImage"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pedidos com filtros e contagem por situação (RF-053)
+         * @description `status`: uma situação do pedido. `from`/`to`: dias (AAAA-MM-DD) no horário de Brasília, pela data do pedido. `search`: número (`PED-000123` ou `123`), nome ou e-mail. `paymentMethod`: `Pix`, `CreditCard` ou `Manual`, a forma com que o pedido foi pago. `statusCounts` usa os mesmos filtros, menos a situação.
+         */
+        get: operations["AdminListOrders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detalhe com cliente, histórico, pagamentos e as ações possíveis agora */
+        get: operations["AdminGetOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/start-preparation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pago → em separação
+         * @description Outra situação → 422 `Ordering.InvalidTransition` (CA2).
+         */
+        post: operations["AdminStartOrderPreparation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/ship": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Em separação → enviado, com o código de rastreio (CA3); manda o EM-08
+         * @description Rastreio fora do formato → 400 no campo `trackingCode`. Outra situação → 422.
+         */
+        post: operations["AdminShipOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/tracking": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Corrige o rastreio de pedido enviado, sem novo e-mail */
+        put: operations["AdminUpdateOrderTracking"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/deliver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Enviado → entregue; manda o EM-09 */
+        post: operations["AdminDeliverOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancela pela loja, com motivo; devolve o estoque e estorna o que foi pago
+         * @description Permitido até em separação. O motivo fica só no histórico; a cliente recebe o EM-10 "pela loja".
+         */
+        post: operations["AdminCancelOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/confirm-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirma o pagamento à mão, com motivo obrigatório (CA1)
+         * @description Exceção para pagamento conciliado fora do sistema: grava um pagamento `Manual` e cancela o PIX aberto.
+         */
+        post: operations["AdminConfirmOrderPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/gift-message": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Corrige a dedicatória até o pedido ser enviado (RF-047 CA3) */
+        put: operations["AdminCorrectGiftMessage"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1478,6 +1803,91 @@ export interface components {
             version: number;
             products: components["schemas"]["AdminOccasionProductResponse"][];
         };
+        AdminOrderCustomerResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            email: string;
+            phone: null | string;
+            /** Format: int32 */
+            orderCount: number;
+        };
+        AdminOrderHistoryResponse: {
+            fromStatus: null | string;
+            toStatus: string;
+            /** Format: date-time */
+            changedAt: string;
+            changedBy: null | string;
+            note: null | string;
+        };
+        AdminOrderListResponse: {
+            orders: components["schemas"]["PagedResponseOfAdminOrderSummaryResponse"];
+            statusCounts: components["schemas"]["OrderStatusCount"][];
+        };
+        AdminOrderPaymentResponse: {
+            /** Format: uuid */
+            id: string;
+            method: string;
+            status: string;
+            statusDetail: null | string;
+            /** Format: double */
+            amount: number;
+            /** Format: int32 */
+            installments: null | number;
+            providerPaymentId: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            approvedAt: null | string;
+        };
+        AdminOrderResponse: {
+            /** Format: uuid */
+            id: string;
+            number: string;
+            status: string;
+            cancellationReason: null | string;
+            /** Format: date-time */
+            placedAt: string;
+            /** Format: date-time */
+            paymentDueAt: string;
+            customer: components["schemas"]["AdminOrderCustomerResponse"];
+            items: components["schemas"]["OrderItemResponse"][];
+            /** Format: double */
+            subtotal: number;
+            /** Format: double */
+            shippingFee: number;
+            /** Format: double */
+            giftWrapPrice: number;
+            /** Format: double */
+            total: number;
+            shipping: components["schemas"]["OrderShippingResponse"];
+            address: components["schemas"]["OrderAddressResponse"];
+            gift: components["schemas"]["OrderGiftResponse"];
+            notes: null | string;
+            history: components["schemas"]["AdminOrderHistoryResponse"][];
+            payments: components["schemas"]["AdminOrderPaymentResponse"][];
+            allowedActions: string[];
+        };
+        AdminOrderSummaryResponse: {
+            /** Format: uuid */
+            id: string;
+            number: string;
+            status: string;
+            /** Format: date-time */
+            placedAt: string;
+            customerName: string;
+            customerEmail: string;
+            /** Format: double */
+            total: number;
+            /** Format: int32 */
+            itemCount: number;
+            firstProductName: string;
+            firstImageUrl: null | string;
+            isGift: boolean;
+            paymentMethod: null | string;
+            shippingServiceName: string;
+            trackingCode: null | string;
+        };
         AdminProductImageResponse: {
             /** Format: uuid */
             id: string;
@@ -1545,6 +1955,23 @@ export interface components {
             sortOrder: number;
             /** Format: int32 */
             variantCount: number;
+        };
+        AdminUserResponse: {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            name: null | string;
+            role: string;
+            isActive: boolean;
+            emailConfirmed: boolean;
+            isLockedOut: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int32 */
+            orderCount: number;
+            /** Format: date-time */
+            lastOrderAt: null | string;
+            isSelf: boolean;
         };
         AdminVariantResponse: {
             /** Format: uuid */
@@ -1697,6 +2124,55 @@ export interface components {
             /** Format: uuid */
             id: string;
         };
+        DashboardLowStockItem: {
+            /** Format: uuid */
+            variantId: string;
+            /** Format: uuid */
+            productId: string;
+            productName: string;
+            colorName: null | string;
+            sizeName: null | string;
+            sku: string;
+            /** Format: int32 */
+            quantityOnHand: number;
+            /** Format: int32 */
+            lowStockThreshold: number;
+        };
+        DashboardResponse: {
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            to: string;
+            /** Format: int32 */
+            ordersPlaced: number;
+            ordersByStatus: components["schemas"]["OrderStatusCount"][];
+            /** Format: double */
+            revenue: number;
+            /** Format: int32 */
+            paidOrders: number;
+            /** Format: double */
+            averageTicket: number;
+            /** Format: double */
+            refundedAmount: number;
+            /** Format: int32 */
+            refundedPayments: number;
+            toDo: components["schemas"]["DashboardToDoResponse"];
+            /** Format: int32 */
+            lowStockCount: number;
+            lowStock: components["schemas"]["DashboardLowStockItem"][];
+        };
+        DashboardToDoResponse: {
+            /** Format: int32 */
+            awaitingPayment: number;
+            /** Format: int32 */
+            toPrepare: number;
+            /** Format: int32 */
+            preparing: number;
+            /** Format: int32 */
+            inTransit: number;
+            /** Format: int32 */
+            pendingRefunds: number;
+        };
         FeaturedRequest: {
             /** Format: uuid */
             productId: null | string;
@@ -1725,6 +2201,9 @@ export interface components {
         GenerateVariantsResponse: {
             /** Format: int32 */
             created: number;
+        };
+        GiftMessageRequest: {
+            message: null | string;
         };
         /** Format: binary */
         IFormFile: string;
@@ -1845,6 +2324,12 @@ export interface components {
             deliveryDays: null | number;
             isFallback: boolean;
             trackingCode: null | string;
+            trackingUrl: null | string;
+        };
+        OrderStatusCount: {
+            status: string;
+            /** Format: int32 */
+            count: number;
         };
         OrderSummaryResponse: {
             /** Format: uuid */
@@ -1862,8 +2347,30 @@ export interface components {
             firstProductName: string;
             firstImageUrl: null | string;
         };
+        PagedResponseOfAdminOrderSummaryResponse: {
+            items: components["schemas"]["AdminOrderSummaryResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalItems: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
         PagedResponseOfAdminProductSummaryResponse: {
             items: components["schemas"]["AdminProductSummaryResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalItems: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
+        PagedResponseOfAdminUserResponse: {
+            items: components["schemas"]["AdminUserResponse"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
@@ -1951,6 +2458,25 @@ export interface components {
             /** Format: int32 */
             installments: null | number;
             payerDocument: null | components["schemas"]["PayerDocumentRequest"];
+        };
+        PendingRefundResponse: {
+            /** Format: uuid */
+            paymentId: string;
+            /** Format: uuid */
+            orderId: string;
+            orderNumber: string;
+            customerName: string;
+            customerEmail: string;
+            method: string;
+            providerPaymentId: null | string;
+            /** Format: double */
+            amount: number;
+            status: string;
+            statusDetail: null | string;
+            kind: string;
+            /** Format: date-time */
+            cancelledAt: string;
+            actions: string[];
         };
         PlacedOrderResponse: {
             /** Format: uuid */
@@ -2073,6 +2599,12 @@ export interface components {
             cpfMasked: null | string;
             hasCpf: boolean;
             emailConfirmed: boolean;
+        };
+        ReasonRequest: {
+            reason: null | string;
+        };
+        RefundNoteRequest: {
+            note: null | string;
         };
         RegisterRequest: {
             fullName: string;
@@ -2291,6 +2823,9 @@ export interface components {
             /** Format: int32 */
             quantityOnHand: number;
         };
+        TrackingCodeRequest: {
+            trackingCode: null | string;
+        };
         UpdateCategoryRequest: {
             /** Format: int32 */
             version: number;
@@ -2348,6 +2883,12 @@ export interface components {
             width: number;
             /** Format: int32 */
             height: number;
+        };
+        UserRoleRequest: {
+            role: null | string;
+        };
+        UserStatusRequest: {
+            isActive: boolean;
         };
         VariantByBarcodeResponse: {
             /** Format: uuid */
@@ -2686,6 +3227,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CartResponse"];
+                };
+            };
+        };
+    };
+    AdminDashboard: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardResponse"];
                 };
             };
         };
@@ -3611,6 +4175,168 @@ export interface operations {
             };
         };
     };
+    AdminListPendingRefunds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingRefundResponse"][];
+                };
+            };
+        };
+    };
+    AdminRetryRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminSyncPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminMarkPaymentRefunded: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefundNoteRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminListUsers: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                role?: string;
+                isActive?: boolean;
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseOfAdminUserResponse"];
+                };
+            };
+        };
+    };
+    AdminSetUserStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserResponse"];
+                };
+            };
+        };
+    };
+    AdminSetUserRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserRoleRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserResponse"];
+                };
+            };
+        };
+    };
     AdminListColors: {
         parameters: {
             query?: never;
@@ -4106,6 +4832,231 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    AdminListOrders: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                status?: string;
+                from?: string;
+                to?: string;
+                search?: string;
+                paymentMethod?: string;
+                gift?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderListResponse"];
+                };
+            };
+        };
+    };
+    AdminGetOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderResponse"];
+                };
+            };
+        };
+    };
+    AdminStartOrderPreparation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderResponse"];
+                };
+            };
+        };
+    };
+    AdminShipOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrackingCodeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderResponse"];
+                };
+            };
+        };
+    };
+    AdminUpdateOrderTracking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrackingCodeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderResponse"];
+                };
+            };
+        };
+    };
+    AdminDeliverOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderResponse"];
+                };
+            };
+        };
+    };
+    AdminCancelOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderResponse"];
+                };
+            };
+        };
+    };
+    AdminConfirmOrderPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderResponse"];
+                };
+            };
+        };
+    };
+    AdminCorrectGiftMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GiftMessageRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderResponse"];
+                };
             };
         };
     };
