@@ -19,7 +19,7 @@ export function FalarComAMO() {
       href={whatsappUrl("Olá! Vim pelo site da MO e queria tirar uma dúvida.")}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-4 right-4 z-30 inline-flex min-h-11 items-center gap-2 rounded-full bg-tinta py-2.5 pl-3.5 pr-4 text-sm font-medium text-cartela shadow-[0_10px_24px_-10px_rgb(74_40_44/0.55)] transition-transform duration-300 ease-solta hover:-translate-y-0.5"
+      className="botao botao-tinta botao-pequeno fixed bottom-4 right-4 z-30 pl-3.5 pr-4"
     >
       <ChatIcon />
       Falar com a MO

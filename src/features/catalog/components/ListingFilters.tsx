@@ -152,7 +152,7 @@ export function ListingFilters({ action, filters, state, hidden = {}, labels = D
       <div className="flex items-center gap-5">
         <button
           type="submit"
-          className="min-h-11 bg-tinta px-6 text-sm font-medium uppercase tracking-[0.16em] text-cartela transition-colors hover:bg-grafite"
+          className="botao botao-tinta botao-pequeno"
         >
           Aplicar
         </button>

@@ -6,10 +6,11 @@ import { useState } from "react";
 import type { ProductDetails } from "@/features/catalog/api";
 import { findVariant, initialSelection } from "@/features/catalog/variant-selection";
 import { apiRequest } from "@/shared/api/browser-client";
+import { BagIcon, CheckIcon } from "@/shared/ui/icons";
 import { useCart } from "../CartProvider";
 
 const className =
-  "inline-flex min-h-11 items-center whitespace-nowrap bg-tinta px-5 pt-0.5 text-sm font-medium uppercase tracking-[0.18em] text-cartela transition-colors hover:bg-grafite disabled:opacity-60";
+  "botao botao-tinta whitespace-nowrap";
 
 /**
  * "Adicionar à sacola" na peça em destaque da home (specs/26 §4.1): o acabamento padrão já vem escolhido. Quando
@@ -42,6 +43,7 @@ export function AddFeaturedButton({ slug, colorSlug }: { slug: string; colorSlug
   if (state === "added") {
     return (
       <Link href="/carrinho" className={className}>
+        <CheckIcon width={18} height={18} />
         <span role="status">Na sacola: ver</span>
       </Link>
     );
@@ -49,8 +51,8 @@ export function AddFeaturedButton({ slug, colorSlug }: { slug: string; colorSlug
 
   return (
     <button type="button" className={className} disabled={state === "pending"} aria-busy={state === "pending"} onClick={() => void addToBag()}>
-      {/* Do tablet em diante a coluna de texto da cartela é estreita demais para a frase inteira. */}
-      Adicionar<span className="sm:sr-only">&nbsp;à sacola</span>
+      <BagIcon width={18} height={18} />
+      Adicionar à sacola
     </button>
   );
 }

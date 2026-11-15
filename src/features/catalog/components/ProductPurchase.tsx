@@ -6,6 +6,9 @@ import { useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { cartErrorMessage, useCart } from "@/features/cart/CartProvider";
 import { ShippingSimulator } from "@/features/shipping/components/ShippingSimulator";
+import { GuiaDoColar } from "@/features/vitrine/GuiaDoColar";
+import { ChamadaDoMedidor } from "@/features/vitrine/MedidorDeAro";
+import { aroDoNome, centimetrosDoNome, tipoDeMedida, useMedidas } from "@/features/vitrine/medidas";
 import { formatPrice } from "@/shared/lib/format";
 import { WARRANTY_TEXT, absoluteUrl, whatsappUrl } from "@/shared/lib/site";
 import { ChatIcon, FlipIcon } from "@/shared/ui/icons";
@@ -30,7 +33,7 @@ interface ProductPurchaseProps {
 }
 
 const addButton =
-  "min-h-12 bg-tinta px-6 pt-0.5 text-sm font-medium uppercase tracking-[0.18em] text-cartela transition-colors hover:bg-grafite disabled:opacity-60 disabled:hover:bg-tinta";
+  "botao botao-tinta px-8";
 
 /** Opção marcada na vitrine: cartela clara com o aro de folha (specs/26 §2.2, regra 2). */
 const marcada =
@@ -56,6 +59,13 @@ export function ProductPurchase({ product, initialColorSlug, initialSizeName }: 
   const [addError, setAddError] = useState<string | null>(null);
 
   const labels = resolveVariantLabels(product);
+  const medida = tipoDeMedida(labels.size);
+  const { aro: meuAro } = useMedidas();
+  const tamanhoNoMeuAro = medida === "aro" && meuAro !== null ? product.sizes.find((size) => aroDoNome(size.name) === meuAro) : undefined;
+  const comprimentos = product.sizes.flatMap((size) => {
+    const cm = centimetrosDoNome(size.name);
+    return cm === null ? [] : [{ id: size.id, cm }];
+  });
   const images = imagesForColor(product, selection.colorId);
   const mainImage = images[Math.min(imageIndex, images.length - 1)];
   const needsSize = product.sizes.length > 0 && selection.sizeId === null;
@@ -272,6 +282,27 @@ export function ProductPurchase({ product, initialColorSlug, initialSizeName }: 
                 );
               })}
             </div>
+            {medida === "aro" && (
+              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                <ChamadaDoMedidor className="link-ouro inline-flex min-h-11 items-center gap-2" />
+                {tamanhoNoMeuAro && selection.sizeId !== tamanhoNoMeuAro.id && sizeState(product, selection.colorId, tamanhoNoMeuAro.id) === "available" && (
+                  <button type="button" onClick={() => update({ colorId: selection.colorId, sizeId: tamanhoNoMeuAro.id })} className="botao botao-fio botao-pequeno">
+                    Marcar o meu aro ({tamanhoNoMeuAro.name})
+                  </button>
+                )}
+              </div>
+            )}
+            {medida === "comprimento" && comprimentos.length > 0 && (
+              <GuiaDoColar
+                className="mt-6 max-w-sm"
+                comprimentos={comprimentos.map((item) => item.cm)}
+                selecionado={comprimentos.find((item) => item.id === selection.sizeId)?.cm ?? null}
+                onSelecionar={(cm) => {
+                  const alvo = comprimentos.find((item) => item.cm === cm);
+                  if (alvo && sizeState(product, selection.colorId, alvo.id) !== "nonexistent") update({ colorId: selection.colorId, sizeId: alvo.id });
+                }}
+              />
+            )}
           </fieldset>
         )}
 

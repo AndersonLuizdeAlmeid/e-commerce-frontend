@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
     // placehold.co: fotos dos dados de exemplo.
     remotePatterns: [
       { protocol: "https", hostname: "placehold.co" },
+      // Fotos de teste do ambiente local (scripts/ci-api-stub.mjs com STUB_PHOTOS=1); nunca em produção.
+      ...(process.env.NODE_ENV !== "production" ? [{ protocol: "https" as const, hostname: "images.unsplash.com" }] : []),
       {
         protocol: imagesUrl.protocol === "https:" ? "https" : "http",
         hostname: imagesUrl.hostname,

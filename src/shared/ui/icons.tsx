@@ -95,3 +95,49 @@ export function StarMark(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function CloseIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="m6 6 12 12" />
+      <path d="M18 6 6 18" />
+    </Icon>
+  );
+}
+
+export function CheckIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="m5 12.5 4.5 4.5L19 7.5" />
+    </Icon>
+  );
+}
+
+export function PauseIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M9 6v12" />
+      <path d="M15 6v12" />
+    </Icon>
+  );
+}
+
+export function PlayIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M8.5 5.5v13l10-6.5z" />
+    </Icon>
+  );
+}
+
+/** Régua: o medidor de aro. */
+export function RulerIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="8" width="18" height="8" rx="1" />
+      <path d="M7 8v3" />
+      <path d="M11 8v4" />
+      <path d="M15 8v3" />
+    </Icon>
+  );
+}

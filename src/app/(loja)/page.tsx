@@ -1,140 +1,119 @@
-import Image from "next/image";
-import Link from "next/link";
 import { getCategories, getCollections, getProducts, getShowcase, type CardTheme } from "@/features/catalog/api";
 import { ProductGrid } from "@/features/catalog/components/ProductGrid";
+import { FaixaDasLinhas, type Linha } from "@/features/vitrine/FaixaDasLinhas";
+import { PecaEmCena } from "@/features/vitrine/PecaEmCena";
+import { Prateleira, VitrinePorLinha } from "@/features/vitrine/Prateleira";
+import { SemErrarOTamanho } from "@/features/vitrine/SemErrarOTamanho";
 import { SITE_SLOGAN } from "@/shared/lib/site";
-import { ArrowIcon } from "@/shared/ui/icons";
 
 export const revalidate = 300;
 
-// A cartela da vez ocupa duas casas: 11 peças fecham fileiras inteiras em 2, 3 e 4 colunas.
-const NEW_ARRIVALS = 11;
-const COLLECTIONS_ON_HOME = 3;
-const PIECES_PER_SECTION = 4;
+const NOVIDADES = 12;
+/** Peças que se revezam na abertura. */
+const EM_CENA = 4;
+const PECAS_POR_PRATELEIRA = 10;
+const COLECOES_NA_HOME = 2;
 
 /**
- * Home: a vitrine da entrada (specs/26 §4.1). A primeira cartela é a peça em destaque escolhida no painel ou, sem ela,
- * a novidade mais recente com estoque (RF-025 CA1). Depois alterna denso e calmo: categorias, ocasião e coleções.
+ * Home: a peça em cena abre a loja (com preço e sacola), a faixa mostra as linhas, e as prateleiras deslizantes
+ * levam às peças: novidades, a vitrine por linha, a ocasião e as coleções. No meio, o medidor de aro e o guia do colar.
  */
 export default async function HomePage() {
-  const [categories, newArrivals, showcase, collections] = await Promise.all([
+  const [categories, novidades, showcase, collections] = await Promise.all([
     getCategories(),
-    getProducts({ pageSize: NEW_ARRIVALS, sort: "createdAt:desc" }),
+    getProducts({ pageSize: NOVIDADES, sort: "createdAt:desc" }),
     getShowcase(),
     getCollections(),
   ]);
 
   const featured = showcase.featured;
-  const vitrine = featured
-    ? [featured.product, ...newArrivals.items.filter((product) => product.id !== featured.product.id)].slice(0, NEW_ARRIVALS)
-    : newArrivals.items;
+  const recentes = featured ? [featured.product, ...novidades.items.filter((product) => product.id !== featured.product.id)] : novidades.items;
   const featuredColor = featured?.product.colors.find((color) => color.id === featured.colorId)?.slug;
-
+  const emCena = recentes.filter((product) => product.image).slice(0, EM_CENA);
   const mainCategories = categories.filter((category) => !category.parentId);
   const occasion = showcase.occasion;
-  const collectionSections = (
-    await Promise.all(
-      collections.slice(0, COLLECTIONS_ON_HOME).map(async (collection) => ({
-        collection,
-        products: (await getProducts({ collection: collection.slug, pageSize: PIECES_PER_SECTION, sort: "createdAt:desc" })).items,
-      })),
-    )
-  ).filter((section) => section.products.length > 0);
 
-  return (
-    <>
+  const [porLinha, porColecao] = await Promise.all([
+    Promise.all(
+      mainCategories.map(async (category) => ({
+        slug: category.slug,
+        name: category.name,
+        products: (await getProducts({ category: category.slug, pageSize: PECAS_POR_PRATELEIRA, sort: "createdAt:desc" })).items,
+      })),
+    ),
+    Promise.all(
+      collections.slice(0, COLECOES_NA_HOME).map(async (collection) => ({
+        collection,
+        products: (await getProducts({ collection: collection.slug, pageSize: PECAS_POR_PRATELEIRA, sort: "createdAt:desc" })).items,
+      })),
+    ),
+  ]);
+  const linhasComPecas = porLinha.filter((linha) => linha.products.length > 0);
+
+  const faixa: Linha[] = [
+    ...collections.map((collection) => ({
+      id: collection.id,
+      name: collection.name,
+      href: `/colecao/${collection.slug}`,
+      imageUrl: porColecao.find((item) => item.collection.id === collection.id)?.products[0]?.image?.url ?? null,
+    })),
+    ...linhasComPecas.map((linha) => ({ id: linha.slug, name: linha.name, href: `/categoria/${linha.slug}`, imageUrl: linha.products[0]?.image?.url ?? null })),
+  ];
+
+  if (recentes.length === 0) {
+    return (
       <section aria-labelledby="slogan" className="vitrine">
-        <div className="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:pt-12">
-          <h1 id="slogan" className="max-w-3xl font-display text-[2rem] leading-[1.02] tracking-[-0.02em] text-balance sm:text-6xl">
+        <div className="mx-auto max-w-6xl px-4 py-16">
+          <h1 id="slogan" className="max-w-3xl font-display text-[2.5rem] leading-[1.02] tracking-[-0.02em] text-balance sm:text-6xl">
             {SITE_SLOGAN}
           </h1>
-          <p className="mt-2 max-w-xl text-sm text-vitrine-texto sm:mt-3 sm:text-base">
-            Semijoias, acessórios e bolsas, para ela e para ele.
-          </p>
-
-          <div className="mt-5 sm:mt-12">
-            <ProductGrid
-              products={vitrine}
-              highlightFirst
-              corDaPrimeira={featuredColor}
-              emptyMessage="As peças aparecem aqui assim que forem cadastradas."
-            />
+          <div className="mt-10">
+            <ProductGrid products={[]} emptyMessage="As peças aparecem aqui assim que forem cadastradas." />
           </div>
         </div>
       </section>
+    );
+  }
 
-      {mainCategories.length > 0 && (
-        <section aria-labelledby="pelas-pecas" className="mx-auto w-full max-w-6xl px-4 py-16">
-          <h2 id="pelas-pecas" className="font-display text-3xl leading-tight sm:text-4xl">
-            Escolha pela peça
-          </h2>
-          <ul className="mt-8 grid grid-cols-2 gap-x-6 sm:grid-cols-3 lg:grid-cols-4">
-            {mainCategories.map((category) => (
-              <li key={category.id} className="border-t border-linha">
-                <Link
-                  href={`/categoria/${category.slug}`}
-                  className="group flex min-h-16 items-center justify-between gap-3 py-4 font-display text-xl leading-tight"
-                >
-                  {category.name}
-                  <ArrowIcon className="shrink-0 text-tinta-suave transition-transform duration-300 ease-solta group-hover:translate-x-1" />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+  return (
+    <>
+      <PecaEmCena pecas={emCena} corDaPrimeira={featuredColor}>
+        <h1 id="slogan" className="font-display text-[2.75rem] leading-[0.98] tracking-[-0.025em] text-balance sm:text-6xl lg:text-[4.5rem]">
+          {SITE_SLOGAN}
+        </h1>
+        <p className="mt-3 max-w-md text-vitrine-texto sm:text-lg">Semijoias, acessórios e bolsas, para ela e para ele.</p>
+      </PecaEmCena>
 
-      {occasion && (
-        <section aria-labelledby="ocasiao" className="bg-vitrine-funda text-vitrine-tinta">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
-            <div className={occasion.imageUrl ? "grid items-center gap-6 sm:grid-cols-2 sm:gap-10" : undefined}>
-              <div>
-                <h2 id="ocasiao" className="font-display text-4xl leading-[1.05] tracking-[-0.02em] text-balance sm:text-5xl">
-                  {occasion.name}
-                </h2>
-                {occasion.text && <p className="mt-3 max-w-xl sm:text-lg">{occasion.text}</p>}
-              </div>
-              {occasion.imageUrl && (
-                <div className="relative aspect-[3/2] overflow-hidden rounded-[3px]">
-                  <Image src={occasion.imageUrl} alt="" fill sizes="(min-width: 1152px) 560px, (min-width: 640px) 50vw, 100vw" className="object-cover" />
-                </div>
-              )}
-            </div>
-            <div className="mt-10">
-              <ProductGrid products={occasion.products.slice(0, PIECES_PER_SECTION)} fileiraDeQuatro tituloComo="h3" emptyMessage="" />
-            </div>
-          </div>
-        </section>
-      )}
+      <FaixaDasLinhas linhas={faixa} />
 
-      {collectionSections.length > 0 && (
-        <div className="vitrine">
-          <div className="mx-auto max-w-6xl space-y-16 px-4 py-16 sm:space-y-20 sm:py-20">
-            {collectionSections.map(({ collection, products }) => (
-              <section key={collection.id} aria-labelledby={`colecao-${collection.slug}`}>
-                <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
-                  <h2 id={`colecao-${collection.slug}`} className="font-display text-3xl leading-tight sm:text-4xl">
-                    {collection.name}
-                  </h2>
-                  <Link href={`/colecao/${collection.slug}`} className="inline-flex min-h-11 items-center gap-2 text-sm font-medium underline">
-                    Ver a coleção
-                    <span className="sr-only"> {collection.name}</span>
-                  </Link>
-                </div>
-                <div className="mt-6">
-                  <ProductGrid
-                    products={products}
-                    fileiraDeQuatro
-                    tema={collection.cardTheme as CardTheme}
-                    tituloComo="h3"
-                    emptyMessage=""
-                  />
-                </div>
-              </section>
-            ))}
-          </div>
+      <div className="vitrine pb-4 pt-16 sm:pt-24">
+        <Prateleira id="novidades" titulo="Chegaram agora" href="/busca" verTudo="Ver todas as peças" products={recentes} />
+      </div>
+
+      <VitrinePorLinha linhas={linhasComPecas} />
+
+      <SemErrarOTamanho />
+
+      {occasion && occasion.products.length > 0 && (
+        <div className="vitrine-nude border-y border-linha pb-4 pt-16 sm:pt-24">
+          <Prateleira id="ocasiao" titulo={occasion.name} descricao={occasion.text} products={occasion.products} />
         </div>
       )}
+
+      {porColecao
+        .filter((item) => item.products.length > 0)
+        .map(({ collection, products }) => (
+          <div key={collection.id} className="vitrine pb-4 pt-16 sm:pt-24">
+            <Prateleira
+              id={`colecao-${collection.slug}`}
+              titulo={collection.name}
+              href={`/colecao/${collection.slug}`}
+              verTudo="Ver a coleção"
+              products={products}
+              tema={collection.cardTheme as CardTheme}
+            />
+          </div>
+        ))}
     </>
   );
 }

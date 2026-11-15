@@ -66,8 +66,32 @@ const productData = [
   ["Bolsa Shopper Couro", "bolsas", 289.9, ["Caramelo"], [], [], "Shopper de couro legítimo com bolso interno."],
 ];
 
-const image = (name, color) =>
-  `https://placehold.co/800x1000/${color.bg}/${color.fg}/png?text=${encodeURIComponent(`${name}\\n${color.name}`)}`;
+/**
+ * Fotos de teste (Unsplash, as mesmas das prévias aprovadas da MO), só com STUB_PHOTOS=1 no ambiente local: o CI
+ * continua com os retângulos do placehold.co, sem depender de rede externa. Nenhuma é foto de peça da MO.
+ */
+const testPhotos = {
+  "anel-solitario-zirconia": "1591209608777-fb022eac7112",
+  "anel-aparador-cravejado": "1550368566-f9cc32d7392d",
+  "anel-masculino-liso-prata-925": "1576511306125-d962936f022f",
+  "colar-ponto-de-luz": "1705326452390-3ecf6070595f",
+  "colar-corrente-cartier": "1679973297784-dd2811b49334",
+  "colar-letra-inicial": "1506630448388-4e683c67ddb0",
+  "pulseira-riviera": "1720528347585-02ae5d2504bf",
+  "pulseira-masculina-grumet": "1679973297361-b72700ced6a1",
+  "brinco-argola-media": "1631982681280-8ca46226a5c9",
+  "brinco-gota-cristal": "1705326453282-e4e1b78f5fea",
+  "bolsa-tiracolo-matelasse": "1713425886143-6ea8c776bf2d",
+  "bolsa-shopper-couro": "1702326626601-74d2e86922b4",
+};
+const useTestPhotos = process.env.STUB_PHOTOS === "1";
+
+const image = (name, color) => {
+  const photo = useTestPhotos && testPhotos[slugify(name)];
+  return photo
+    ? `https://images.unsplash.com/photo-${photo}?w=1600&q=72&auto=format&fit=crop`
+    : `https://placehold.co/800x1000/${color.bg}/${color.fg}/png?text=${encodeURIComponent(`${name}\\n${color.name}`)}`;
+};
 
 const products = productData.map(([name, categorySlug, price, colorNames, sizeNames, soldOut, description], p) => {
   const slug = slugify(name);
