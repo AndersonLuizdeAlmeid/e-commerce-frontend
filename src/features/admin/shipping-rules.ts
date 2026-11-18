@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 import { formatPrice } from "@/shared/lib/format";
 import type { ShippingRule, ShippingRuleEffect, ShippingRuleInput } from "./api";
 import { formatDecimalInput, formatIsoDate, parseDecimal } from "./validation";

@@ -38,4 +38,12 @@ describe("validação dos formulários de conta", () => {
     expect(safeNextPath("/\\site-malicioso.com")).toBe("/conta");
     expect(safeNextPath(null)).toBe("/conta");
   });
+
+  it("não deixa tab nem quebra de linha virarem outro site (o navegador apaga esses caracteres)", () => {
+    expect(safeNextPath("/\t/site-malicioso.com")).toBe("/conta");
+    expect(safeNextPath("/\n/site-malicioso.com")).toBe("/conta");
+    expect(safeNextPath("/\r\n\\site-malicioso.com")).toBe("/conta");
+    expect(safeNextPath("/%2F/site-malicioso.com")).toBe("/%2F/site-malicioso.com");
+    expect(safeNextPath("/conta/pedidos#topo")).toBe("/conta/pedidos#topo");
+  });
 });
