@@ -63,7 +63,20 @@ export function validateCpf(value: string): string | null {
   return checkDigit(9) === Number(digits[9]) && checkDigit(10) === Number(digits[10]) ? null : "CPF inválido.";
 }
 
-/** Destino seguro depois do login: só caminhos internos (evita open redirect). */
+/**
+ * Destino seguro depois do login: só caminhos internos (evita open redirect). O caminho é resolvido como o navegador
+ * resolve, porque ele apaga tab e quebra de linha: `/\t/evil.com` passaria num teste de texto e viraria `//evil.com`
+ * (entrega 6.2, revisão ASVS V5.1.5).
+ */
 export function safeNextPath(next: string | null | undefined, fallback = "/conta"): string {
-  return next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\") ? next : fallback;
+  if (!next || !next.startsWith("/")) {
+    return fallback;
+  }
+  const base = "https://loja.invalid";
+  try {
+    const url = new URL(next, base);
+    return url.origin === base ? `${url.pathname}${url.search}${url.hash}` : fallback;
+  } catch {
+    return fallback;
+  }
 }

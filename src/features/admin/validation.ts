@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/shared/lib/zod";
 import type { CardTheme, CategoryInput, CollectionInput, OccasionInput, ProductInput, ShippingSettings, StockMovementType } from "./api";
 
 /** Regras dos formulários do painel, no mesmo limite da API (RF-050, RF-051, RF-056). Funções puras, testadas. */

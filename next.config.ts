@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { securityHeaders } from "./src/shared/lib/security-headers";
 
 // Fotos enviadas pelo painel (RF-061): RustFS local em dev; em produção, o domínio público do R2.
 const imagesUrl = new URL(process.env.NEXT_PUBLIC_IMAGES_URL ?? "http://localhost:9000/mo-images");
@@ -6,6 +7,16 @@ const imagesUrl = new URL(process.env.NEXT_PUBLIC_IMAGES_URL ?? "http://localhos
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   output: "standalone",
+  // CSP e demais headers de segurança (arquivo 17 §2, entrega 6 §3 P5). CSP_MODE=enforce bloqueia; vazio só reporta.
+  async headers() {
+    return securityHeaders({
+      apiUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001",
+      siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+      imagesUrl: process.env.NEXT_PUBLIC_IMAGES_URL,
+      cspMode: process.env.CSP_MODE,
+      development: process.env.NODE_ENV !== "production",
+    });
+  },
   images: {
     // SEO-09: next/image converte para AVIF/WebP e gera tamanhos responsivos.
     formats: ["image/avif", "image/webp"],

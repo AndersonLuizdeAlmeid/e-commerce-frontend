@@ -1,0 +1,3 @@
+# Falsos positivos conferidos (entrega 6.2 do backend). Cada linha é a impressão digital que o gitleaks mostra.
+# CI remonta a chave de deploy a partir do segredo DEPLOY_SSH_KEY: só o texto BEGIN/END, nenhuma chave.
+736f9431dd11b0c2c735124208891d6371693e5b:.github/workflows/ci.yml:private-key:155

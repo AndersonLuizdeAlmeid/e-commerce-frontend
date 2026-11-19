@@ -13,6 +13,8 @@ ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_IMAGES_URL
 ARG NEXT_PUBLIC_WHATSAPP_NUMBER
 ARG IMAGES_ALLOW_LOCAL_IP
+# CSP: vazio só reporta (padrão); "enforce" bloqueia. Os headers são fixados no build (entrega 6.2 do backend).
+ARG CSP_MODE
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # O build pré-renderiza a home e o sitemap, e a API do ambiente não existe aqui: usa a API falsa do CI e descarta
