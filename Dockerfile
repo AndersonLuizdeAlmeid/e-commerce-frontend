@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1
-FROM node:26-alpine AS deps
+FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
-FROM node:26-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 # O Next.js grava as NEXT_PUBLIC_* no JavaScript durante o build, então elas definem o ambiente da imagem.
@@ -31,7 +31,7 @@ RUN (node scripts/ci-api-stub.mjs &) \
  && API_INTERNAL_URL=http://localhost:5099 npm run build \
  && node scripts/drop-api-prerenders.mjs
 
-FROM node:26-alpine AS runtime
+FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
