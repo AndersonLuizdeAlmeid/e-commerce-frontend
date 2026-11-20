@@ -161,7 +161,7 @@ function FakeCard({ onPay }: { onPay: (request: PayRequest) => Promise<void> }) 
 
   return (
     <div className="space-y-2 border border-dashed border-tinta/40 p-3 text-sm">
-      <p className="text-tinta-suave">Cartão de teste (só em desenvolvimento; com a chave do Mercado Pago aparece o formulário de verdade).</p>
+      <p className="text-tinta-suave">Cartão de teste: nenhum valor é cobrado. Com a chave do Mercado Pago aparece o formulário de verdade.</p>
       <div className="flex flex-wrap gap-x-5">
         <button type="button" disabled={busy} onClick={() => void pay("fake-approved")} className="inline-flex min-h-11 items-center font-medium underline disabled:opacity-60">
           Pagar com cartão aprovado
