@@ -5,7 +5,8 @@ import { SacolaLink } from "@/features/cart/components/SacolaLink";
 import { getCategories, getCollections } from "@/features/catalog/api";
 import { CategoryNav } from "@/features/catalog/components/CategoryNav";
 import { MedidorProvider } from "@/features/vitrine/MedidorDeAro";
-import { INSTAGRAM_URL, SITE_SLOGAN, WARRANTY_TEXT, whatsappUrl } from "@/shared/lib/site";
+import { INSTAGRAM_URL, SITE_NAME, SITE_SLOGAN, WARRANTY_TEXT, whatsappUrl } from "@/shared/lib/site";
+import { storeIdentity } from "@/shared/lib/store-identity";
 import { FalarComAMO } from "./FalarComAMO";
 import { SearchIcon, StarMark } from "./icons";
 import { Monograma } from "./Monograma";
@@ -40,7 +41,7 @@ export async function StoreChrome({ children }: { children: React.ReactNode }) {
         <main className="flex flex-1 flex-col">{children}</main>
 
         <footer className="border-t border-linha">
-          <div className="mx-auto grid max-w-6xl gap-10 px-4 pb-28 pt-14 sm:grid-cols-[1fr_auto] sm:pb-16">
+          <div className="mx-auto grid max-w-6xl gap-10 px-4 pb-10 pt-14 sm:grid-cols-[1fr_auto] sm:pb-12">
             <div>
               <p className="flex items-start gap-2 font-display text-3xl leading-tight sm:text-4xl">
                 {SITE_SLOGAN}
@@ -61,9 +62,46 @@ export async function StoreChrome({ children }: { children: React.ReactNode }) {
               </li>
             </ul>
           </div>
+          <StoreFooterLegal />
         </footer>
         <FalarComAMO />
       </MedidorProvider>
     </CartProvider>
+  );
+}
+
+const LEGAL_LINKS = [
+  { href: "/trocas-e-devolucoes", label: "Trocas e devoluções" },
+  { href: "/privacidade", label: "Privacidade" },
+  { href: "/termos", label: "Termos de uso" },
+] as const;
+
+/**
+ * Identificação da loja (Decreto 7.962/2013) e páginas legais, em todas as páginas da loja. Os dados vêm da
+ * configuração do ambiente; o que ainda não foi configurado simplesmente não aparece (as páginas legais avisam).
+ */
+function StoreFooterLegal() {
+  const identity = storeIdentity();
+  const parts = [identity.legalName ?? SITE_NAME, identity.cnpj && `CNPJ ${identity.cnpj}`, identity.address].filter(Boolean);
+  const contact = [identity.email, identity.phone].filter(Boolean);
+
+  return (
+    <div className="border-t border-linha">
+      <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 pb-28 pt-5 text-xs text-tinta-suave sm:flex-row sm:items-start sm:justify-between sm:pb-6">
+        <div className="space-y-0.5">
+          <p>{parts.join(" · ")}</p>
+          {contact.length > 0 && <p>Atendimento: {contact.join(" · ")}</p>}
+        </div>
+        <ul className="flex flex-wrap gap-x-5">
+          {LEGAL_LINKS.map((link) => (
+            <li key={link.href}>
+              <Link href={link.href} className="inline-flex min-h-11 items-center hover:text-tinta hover:underline sm:min-h-0">
+                {link.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }

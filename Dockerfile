@@ -12,6 +12,12 @@ ARG NEXT_PUBLIC_SITE_URL
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_IMAGES_URL
 ARG NEXT_PUBLIC_WHATSAPP_NUMBER
+# Identificação da loja no rodapé e nas páginas legais (entrega 6.3 do backend). Vazias, as páginas avisam que são rascunho.
+ARG NEXT_PUBLIC_STORE_LEGAL_NAME
+ARG NEXT_PUBLIC_STORE_CNPJ
+ARG NEXT_PUBLIC_STORE_ADDRESS
+ARG NEXT_PUBLIC_STORE_EMAIL
+ARG NEXT_PUBLIC_STORE_PHONE
 ARG IMAGES_ALLOW_LOCAL_IP
 # CSP: vazio só reporta (padrão); "enforce" bloqueia. Os headers são fixados no build (entrega 6.2 do backend).
 ARG CSP_MODE

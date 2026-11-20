@@ -130,6 +130,11 @@ jobs:
             NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_IMAGES_URL=http://rustfs:9000/mo-images
             IMAGES_ALLOW_LOCAL_IP=true
+            NEXT_PUBLIC_STORE_LEGAL_NAME=${{ vars.STORE_LEGAL_NAME }}
+            NEXT_PUBLIC_STORE_CNPJ=${{ vars.STORE_CNPJ }}
+            NEXT_PUBLIC_STORE_ADDRESS=${{ vars.STORE_ADDRESS }}
+            NEXT_PUBLIC_STORE_EMAIL=${{ vars.STORE_EMAIL }}
+            NEXT_PUBLIC_STORE_PHONE=${{ vars.STORE_PHONE }}
           provenance: mode=max
           sbom: true
 

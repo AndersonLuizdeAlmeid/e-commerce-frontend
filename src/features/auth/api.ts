@@ -72,3 +72,18 @@ export function getProfile(): Promise<Profile> {
 export function updateProfile(request: UpdateProfileRequest): Promise<void> {
   return apiRequest("/api/v1/me/profile", { method: "PUT", body: request, auth: true });
 }
+
+// ---------- Privacidade (LGPD, entrega 6 §3 P7 e P8) ----------
+
+/** Tudo o que a loja guarda sobre a conta. O formato fica com a API: a tela só entrega o arquivo. */
+export type DataExport = Record<string, unknown>;
+
+export function exportMyData(): Promise<DataExport> {
+  return apiRequest<DataExport>("/api/v1/me/data-export", { auth: true });
+}
+
+/** Exclui a conta e encerra a sessão neste navegador. A API recusa (422) com pedido em andamento ou estorno pendente. */
+export async function deleteMyAccount(password: string): Promise<void> {
+  await apiRequest("/api/v1/me", { method: "DELETE", body: { password }, auth: true });
+  clearSession();
+}

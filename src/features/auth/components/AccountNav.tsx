@@ -7,6 +7,7 @@ const LINKS = [
   { href: "/conta", label: "Meus dados" },
   { href: "/conta/pedidos", label: "Pedidos" },
   { href: "/conta/enderecos", label: "Endereços" },
+  { href: "/conta/privacidade", label: "Privacidade" },
 ] as const;
 
 /** Abas da área do cliente. O fio em folha marca a página atual; o texto continua em tinta (specs/26 §2.2). */
@@ -14,7 +15,7 @@ export function AccountNav() {
   const pathname = usePathname();
   return (
     <nav aria-label="Minha conta" className="border-b border-linha">
-      <ul className="-mb-px flex gap-6">
+      <ul className="-mb-px flex flex-wrap gap-x-6">
         {LINKS.map((link) => {
           const current = pathname === link.href;
           return (

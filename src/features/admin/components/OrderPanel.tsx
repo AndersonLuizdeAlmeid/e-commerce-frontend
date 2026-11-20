@@ -22,7 +22,7 @@ import {
 import { GiftTag, Modal, Notice, OrderStatusTag, ReasonDialog, formatDateTime, useNotice } from "./BackofficeUi";
 import { adminButton, adminButtonGhost, adminLink, cellInput } from "./ui";
 
-type Dialog = "cancel" | "confirm-payment" | "gift" | null;
+type Dialog = "cancel" | "confirm-payment" | "gift" | "return" | null;
 
 /**
  * RF-053: o pedido da separação à entrega. O que fazer agora fica no topo (uma ação principal por situação), a
@@ -159,12 +159,18 @@ export function OrderPanel({ id }: { id: string }) {
 
           <Section title="Cliente">
             <p className="text-sm font-medium">{data.customer.name}</p>
-            <a href={`mailto:${data.customer.email}`} className="block text-sm underline">{data.customer.email}</a>
-            {data.customer.phone && <p className="numeros text-sm">{data.customer.phone}</p>}
-            <p className="mt-1 text-xs text-tinta-suave">
-              {data.customer.orderCount === 1 ? "Primeiro pedido" : `${data.customer.orderCount} pedidos na loja`} ·{" "}
-              <Link href={`/admin/pedidos?busca=${encodeURIComponent(data.customer.email)}`} className="underline print:hidden">ver pedidos</Link>
-            </p>
+            {data.customer.removed ? (
+              <p className="text-sm text-tinta-suave">A cliente excluiu a conta. O pedido ficou só com valores, peças e datas.</p>
+            ) : (
+              <>
+                <a href={`mailto:${data.customer.email}`} className="block text-sm underline">{data.customer.email}</a>
+                {data.customer.phone && <p className="numeros text-sm">{data.customer.phone}</p>}
+                <p className="mt-1 text-xs text-tinta-suave">
+                  {data.customer.orderCount === 1 ? "Primeiro pedido" : `${data.customer.orderCount} pedidos na loja`} ·{" "}
+                  <Link href={`/admin/pedidos?busca=${encodeURIComponent(data.customer.email)}`} className="underline print:hidden">ver pedidos</Link>
+                </p>
+              </>
+            )}
           </Section>
 
           <Section title="Pagamento" className="print:hidden">
@@ -222,6 +228,23 @@ export function OrderPanel({ id }: { id: string }) {
           onClose={() => setDialog(null)}
         />
       )}
+      {dialog === "return" && (
+        <ReasonDialog
+          title={`Registrar a devolução de ${data.number}?`}
+          description={
+            <>
+              Use quando a peça voltou (arrependimento em até 7 dias ou troca sem reposição). O valor pago é estornado e a cliente recebe o e-mail do
+              estorno. <strong className="font-medium text-tinta">O estoque não volta sozinho</strong>: confira a peça e lance a entrada em Estoque.
+            </>
+          }
+          label="Motivo"
+          placeholder="Ex.: arrependimento em 5 dias, peça conferida sem uso"
+          confirmLabel="Registrar devolução"
+          danger
+          onConfirm={async (note) => applied(await backofficeApi.returnOrder(id, note), "Devolução registrada. O estorno foi pedido ao Mercado Pago.")}
+          onClose={() => setDialog(null)}
+        />
+      )}
       {dialog === "gift" && <GiftMessageDialog order={data} onApplied={applied} onClose={() => setDialog(null)} />}
     </article>
   );
@@ -254,6 +277,7 @@ const NEXT_STEP_TEXT: Partial<Record<AdminOrder["status"], string>> = {
   PaymentConfirmed: "Pago. Separe as peças e marque quando começar.",
   Preparing: "Em separação. Ao despachar, cole o código de rastreio: a cliente recebe o e-mail com ele.",
   Shipped: "A caminho. Marque como entregue quando a transportadora confirmar.",
+  Delivered: "Entregue. Se a peça voltar (arrependimento em até 7 dias ou troca), registre a devolução para estornar o valor.",
 };
 
 /** A ação do momento, em destaque; exceções (cancelar, confirmar à mão) ficam ao lado, mais discretas. */
@@ -268,7 +292,7 @@ function NextStep({ order, onApplied, onDialog }: { order: AdminOrder; onApplied
   });
 
   const text = NEXT_STEP_TEXT[order.status];
-  const hasSecondary = order.allowedActions.includes("ConfirmPayment") || order.allowedActions.includes("Cancel");
+  const hasSecondary = ["ConfirmPayment", "Cancel", "Return"].some((action) => order.allowedActions.includes(action as AdminOrder["allowedActions"][number]));
   if (!text && !hasSecondary) return null;
 
   return (
@@ -286,6 +310,9 @@ function NextStep({ order, onApplied, onDialog }: { order: AdminOrder; onApplied
         )}
         {order.allowedActions.includes("Cancel") && (
           <button type="button" className={`${adminLink} min-h-10 text-alerta`} onClick={() => onDialog("cancel")}>Cancelar pedido</button>
+        )}
+        {order.allowedActions.includes("Return") && (
+          <button type="button" className={adminButtonGhost} onClick={() => onDialog("return")}>Registrar devolução</button>
         )}
       </div>
       {act.isError && <p role="alert" className="mt-2 text-sm text-alerta">{errorMessage(act.error)}</p>}

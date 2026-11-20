@@ -548,6 +548,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/data-export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Baixa todos os dados da conta em JSON (LGPD)
+         * @description Perfil, endereços e pedidos com itens, situação e pagamentos, só da própria conta. Até 3 por dia (429 depois).
+         */
+        get: operations["ExportMyData"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Exclui a conta (LGPD): apaga os dados pessoais e mantém os pedidos sem eles
+         * @description Pede a senha atual (400 `Identity.WrongCurrentPassword` se não conferir). Pedido entre aguardando pagamento e enviado → 422 `Identity.AccountHasOpenOrders`; estorno em andamento → 422 `Identity.AccountHasPendingRefund`. Sucesso: 204, todas as sessões encerradas e o cookie de sessão apagado.
+         */
+        delete: operations["DeleteMyAccount"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/addresses": {
         parameters: {
             query?: never;
@@ -1365,6 +1405,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/orders/{id}/return": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Entregue → devolvido, com o motivo; estorna o total pelo Outbox
+         * @description Arrependimento ou troca (entrega 6 §3, P11). A cliente recebe o EM-13 quando o estorno é aceito; pagamento confirmado à mão vai para os estornos pendentes. O estoque não volta sozinho: a peça é conferida e entra por ajuste.
+         */
+        post: operations["AdminReturnOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/orders/{id}/gift-message": {
         parameters: {
             query?: never;
@@ -1811,6 +1871,7 @@ export interface components {
             phone: null | string;
             /** Format: int32 */
             orderCount: number;
+            removed: boolean;
         };
         AdminOrderHistoryResponse: {
             fromStatus: null | string;
@@ -1972,6 +2033,7 @@ export interface components {
             /** Format: date-time */
             lastOrderAt: null | string;
             isSelf: boolean;
+            removed: boolean;
         };
         AdminVariantResponse: {
             /** Format: uuid */
@@ -2172,6 +2234,90 @@ export interface components {
             inTransit: number;
             /** Format: int32 */
             pendingRefunds: number;
+        };
+        DataExportAccount: {
+            fullName: string;
+            email: string;
+            phone: null | string;
+            cpf: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            emailConfirmedAt: null | string;
+        };
+        DataExportAddress: {
+            recipient: string;
+            postalCode: string;
+            street: string;
+            number: string;
+            complement: null | string;
+            district: string;
+            city: string;
+            state: string;
+            isDefault: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        DataExportOrder: {
+            number: string;
+            status: string;
+            /** Format: date-time */
+            placedAt: string;
+            /** Format: double */
+            subtotal: number;
+            /** Format: double */
+            shippingFee: number;
+            /** Format: double */
+            giftWrapPrice: number;
+            /** Format: double */
+            total: number;
+            shippingServiceName: string;
+            trackingCode: null | string;
+            shippingAddress: components["schemas"]["DataExportAddress"];
+            isGift: boolean;
+            giftMessage: null | string;
+            notes: null | string;
+            items: components["schemas"]["DataExportOrderItem"][];
+            history: components["schemas"]["DataExportOrderStatus"][];
+            payments: components["schemas"]["DataExportPayment"][];
+        };
+        DataExportOrderItem: {
+            sku: string;
+            productName: string;
+            colorName: null | string;
+            sizeName: null | string;
+            /** Format: double */
+            unitPrice: number;
+            /** Format: int32 */
+            quantity: number;
+        };
+        DataExportOrderStatus: {
+            status: string;
+            /** Format: date-time */
+            changedAt: string;
+        };
+        DataExportPayment: {
+            method: string;
+            status: string;
+            /** Format: double */
+            amount: number;
+            /** Format: int32 */
+            installments: null | number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            approvedAt: null | string;
+        };
+        DataExportResponse: {
+            /** Format: date-time */
+            generatedAt: string;
+            account: components["schemas"]["DataExportAccount"];
+            addresses: components["schemas"]["DataExportAddress"][];
+            orders: components["schemas"]["DataExportOrder"][];
+            notes: string[];
+        };
+        DeleteAccountRequest: {
+            password: null | string;
         };
         FeaturedRequest: {
             /** Format: uuid */
@@ -2477,6 +2623,7 @@ export interface components {
             /** Format: date-time */
             cancelledAt: string;
             actions: string[];
+            orderStatus: string;
         };
         PlacedOrderResponse: {
             /** Format: uuid */
@@ -2621,6 +2768,9 @@ export interface components {
         ResetPasswordRequest: {
             token: string;
             newPassword: string;
+        };
+        ReturnRequest: {
+            note: null | string;
         };
         SeoResponse: {
             title: string;
@@ -3682,6 +3832,48 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["UpdateProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ExportMyData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataExportResponse"];
+                };
+            };
+        };
+    };
+    DeleteMyAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteAccountRequest"];
             };
         };
         responses: {
@@ -5020,6 +5212,32 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderResponse"];
+                };
+            };
+        };
+    };
+    AdminReturnOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReturnRequest"];
             };
         };
         responses: {

@@ -4,8 +4,16 @@ import type { Paged } from "./api";
 // Fase 5 (entrega specs/entregas/fase-5-backoffice.md): pedidos, estornos pendentes, usuários e dashboard.
 // Tipos escritos à mão, como o resto do painel, até o próximo `npm run gen:api`.
 
-export type OrderStatus = "PendingPayment" | "PaymentConfirmed" | "Preparing" | "Shipped" | "Delivered" | "Cancelled";
-export type AdminOrderAction = "ConfirmPayment" | "StartPreparation" | "Ship" | "UpdateTracking" | "Deliver" | "Cancel" | "CorrectGiftMessage";
+export type OrderStatus = "PendingPayment" | "PaymentConfirmed" | "Preparing" | "Shipped" | "Delivered" | "Cancelled" | "Returned";
+export type AdminOrderAction =
+  | "ConfirmPayment"
+  | "StartPreparation"
+  | "Ship"
+  | "UpdateTracking"
+  | "Deliver"
+  | "Cancel"
+  | "CorrectGiftMessage"
+  | "Return";
 export type PaymentMethod = "Pix" | "CreditCard" | "Manual";
 
 export interface AdminOrderSummary {
@@ -76,7 +84,8 @@ export interface AdminOrder {
   cancellationReason: string | null;
   placedAt: string;
   paymentDueAt: string;
-  customer: { id: string; name: string; email: string; phone: string | null; orderCount: number };
+  /** `removed`: a cliente excluiu a conta (entrega 6 §3, P7); nome e e-mail já vêm substituídos. */
+  customer: { id: string; name: string; email: string; phone: string | null; orderCount: number; removed: boolean };
   items: AdminOrderItem[];
   subtotal: number;
   shippingFee: number;
@@ -133,8 +142,10 @@ export interface PendingRefund {
   status: string;
   statusDetail: string | null;
   kind: PendingRefundKind;
+  /** Quando o pedido foi cancelado ou devolvido. */
   cancelledAt: string;
   actions: PendingRefundAction[];
+  orderStatus: OrderStatus;
 }
 
 export type UserRole = "Customer" | "Admin";
@@ -151,6 +162,8 @@ export interface AdminUser {
   orderCount: number;
   lastOrderAt: string | null;
   isSelf: boolean;
+  /** Conta excluída pela cliente: sem ações. */
+  removed: boolean;
 }
 
 export interface UserFilters {
@@ -210,6 +223,7 @@ export const backofficeApi = {
   cancel: (id: string, reason: string) => send<AdminOrder>("POST", `/orders/${id}/cancel`, { reason }),
   confirmPayment: (id: string, reason: string) => send<AdminOrder>("POST", `/orders/${id}/confirm-payment`, { reason }),
   correctGiftMessage: (id: string, message: string) => send<AdminOrder>("PUT", `/orders/${id}/gift-message`, { message }),
+  returnOrder: (id: string, note: string) => send<AdminOrder>("POST", `/orders/${id}/return`, { note }),
   orderingSettings: () => get<{ giftWrapPrice: number }>("/ordering/settings"),
   saveOrderingSettings: (giftWrapPrice: number) => send("PUT", "/ordering/settings", { giftWrapPrice }),
 
@@ -243,7 +257,7 @@ export const backofficeKeys = {
 // ---------- Regras puras (testadas em backoffice.test.ts) ----------
 
 /** As abas da lista, na ordem do trabalho da loja. */
-export const STATUS_TABS: readonly OrderStatus[] = ["PaymentConfirmed", "Preparing", "Shipped", "PendingPayment", "Delivered", "Cancelled"];
+export const STATUS_TABS: readonly OrderStatus[] = ["PaymentConfirmed", "Preparing", "Shipped", "PendingPayment", "Delivered", "Cancelled", "Returned"];
 
 /** Nome curto da aba: a lista não repete "pagamento" em todo lugar. */
 export const STATUS_TAB_LABELS: Record<OrderStatus, string> = {
@@ -253,6 +267,7 @@ export const STATUS_TAB_LABELS: Record<OrderStatus, string> = {
   Shipped: "Enviados",
   Delivered: "Entregues",
   Cancelled: "Cancelados",
+  Returned: "Devolvidos",
 };
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {

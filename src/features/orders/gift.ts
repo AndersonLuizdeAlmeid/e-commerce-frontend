@@ -34,6 +34,7 @@ const STATUS_LABELS: Record<string, string> = {
   Shipped: "Enviado",
   Delivered: "Entregue",
   Cancelled: "Cancelado",
+  Returned: "Devolvido",
 };
 
 export function orderStatusLabel(status: string): string {
