@@ -99,6 +99,8 @@ export function UsersPanel() {
               <div className="flex w-full items-center gap-4 sm:w-auto">
                 {user.isSelf ? (
                   <span className="text-xs text-tinta-suave">Outra administradora muda a sua conta.</span>
+                ) : user.removed ? (
+                  <span className="text-xs text-tinta-suave">Conta excluída pela cliente.</span>
                 ) : (
                   <>
                     <button type="button" className={adminLink} onClick={() => setChange({ user, kind: "role" })}>

@@ -25,7 +25,7 @@ const KIND_TEXT: Record<PendingRefundKind, { title: string; help: string }> = {
   },
 };
 
-/** Entrega 5 §3, P6: todo dinheiro preso de pedido cancelado, até ser devolvido. */
+/** Entrega 5 §3, P6: todo dinheiro preso de pedido cancelado ou devolvido (entrega 6 §3, P11), até voltar à cliente. */
 export function RefundsPanel() {
   const client = useQueryClient();
   const [notice, setNotice] = useNotice(8000);
@@ -77,11 +77,19 @@ export function RefundsPanel() {
                     <span className="numeros text-lg">{formatPrice(refund.amount)}</span>
                     <span className="text-sm text-tinta-suave">{PAYMENT_METHOD_LABELS[refund.method]}</span>
                   </p>
-                  <p className="text-sm">{refund.customerName} · <a href={`mailto:${refund.customerEmail}`} className="underline">{refund.customerEmail}</a></p>
+                  <p className="text-sm">
+                    {refund.customerName}
+                    {!refund.customerEmail.endsWith("@invalid") && (
+                      <>
+                        {" · "}
+                        <a href={`mailto:${refund.customerEmail}`} className="underline">{refund.customerEmail}</a>
+                      </>
+                    )}
+                  </p>
                   <p className={`mt-2 text-sm font-medium ${refund.kind === "RefundFailed" ? "text-alerta" : ""}`}>{text.title}</p>
                   <p className="text-sm text-tinta-suave">{text.help}</p>
                   <p className="numeros mt-1 text-xs text-tinta-suave">
-                    Cancelado em {formatDateTime(refund.cancelledAt)}
+                    {refund.orderStatus === "Returned" ? "Devolvido" : "Cancelado"} em {formatDateTime(refund.cancelledAt)}
                     {refund.providerPaymentId && ` · Mercado Pago ${refund.providerPaymentId}`}
                     {refund.statusDetail && ` · ${refund.statusDetail}`}
                   </p>

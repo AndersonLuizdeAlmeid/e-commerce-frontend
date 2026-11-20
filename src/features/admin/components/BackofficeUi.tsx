@@ -22,13 +22,14 @@ const STATUS_MARK: Record<OrderStatus, string> = {
   Shipped: "bg-tinta",
   Delivered: "border border-dashed border-tinta-suave",
   Cancelled: "border border-dashed border-alerta",
+  Returned: "border border-dashed border-alerta",
 };
 
 export function OrderStatusTag({ status }: { status: OrderStatus }) {
   return (
     <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-sm">
       <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${STATUS_MARK[status]}`} />
-      <span className={status === "Cancelled" ? "text-alerta" : status === "Delivered" ? "text-tinta-suave" : ""}>{orderStatusLabel(status)}</span>
+      <span className={status === "Cancelled" || status === "Returned" ? "text-alerta" : status === "Delivered" ? "text-tinta-suave" : ""}>{orderStatusLabel(status)}</span>
     </span>
   );
 }
