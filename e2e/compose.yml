@@ -1,0 +1,55 @@
+# Pilha dos testes de ponta a ponta (entrega 6 do backend, fatia 6.4, P16): API e migrator em imagem, Postgres sem
+# volume (cada subida começa do zero, com o seed de desenvolvimento) e Mailpit. Plataformas de pagamento e de frete
+# falsas, como no ambiente de desenvolvimento. A loja roda fora, com o build de produção (npm run e2e:build).
+#
+# Imagens: E2E_API_IMAGE e E2E_MIGRATOR_IMAGE. No CI, as da main do backend; localmente, as geradas por
+# `npm run e2e:images` a partir do repositório do backend ao lado deste.
+name: mo-e2e
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: ecommerce
+      POSTGRES_PASSWORD: ecommerce
+    tmpfs: [/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ecommerce -d ecommerce"]
+      interval: 2s
+      retries: 30
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports: ["8125:8025"]
+
+  migrator:
+    image: ${E2E_MIGRATOR_IMAGE:-mo-e2e-migrator:local}
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      ConnectionStrings__Database: Host=postgres;Port=5432;Database=ecommerce;Username=ecommerce;Password=ecommerce
+      Database__AppRole: mo_app
+      Database__AppPassword: mo-app-e2e-descartavel
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  api:
+    image: ${E2E_API_IMAGE:-mo-e2e-api:local}
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Database: Host=postgres;Port=5432;Database=ecommerce;Username=mo_app;Password=mo-app-e2e-descartavel
+      Cors__AllowedOrigins__0: http://localhost:3100
+      Email__Smtp__Host: mailpit
+      Email__Smtp__Port: "1025"
+      Email__FrontendBaseUrl: http://localhost:3100
+      Storefront__RevalidateUrl: http://host.docker.internal:3100/api/revalidate
+      # Os testes cadastram e entram muitas vezes por minuto a partir do mesmo IP.
+      RateLimiting__AuthStrict__PermitLimit: "1000"
+      RateLimiting__CustomerWrite__TokenLimit: "1000"
+      Payments__Provider: Fake
+      Shipping__Provider: Fake
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    ports: ["5101:8080"]
+    depends_on:
+      migrator: { condition: service_completed_successfully }
+      mailpit: { condition: service_started }

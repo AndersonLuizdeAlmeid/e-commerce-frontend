@@ -1,6 +1,7 @@
 /**
  * Validação no navegador só para resposta rápida; a regra que vale é a da API (ADR-F02). Mesmas regras do backend:
- * senha de 8 a 128 com maiúscula, minúscula e número (RF-001 CA3), CPF com dígitos verificadores, telefone com DDD.
+ * senha de 12 a 128 sem regra de composição e fora das senhas comuns (entrega 6, S4), CPF com dígitos verificadores,
+ * telefone com DDD.
  */
 
 export function validateEmail(value: string): string | null {
@@ -11,15 +12,49 @@ export function validateEmail(value: string): string | null {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? null : "Informe um e-mail válido.";
 }
 
+export const PASSWORD_HINT = "Pelo menos 12 caracteres. Uma frase funciona bem, como “minha joia preferida da loja”.";
+
+// Mesma lista do backend (PasswordRules.cs): palavra comum enfeitada com números ou símbolos.
+const COMMON_WORDS = new Set([
+  "", "senha", "minhasenha", "senhasegura", "novasenha", "password", "mypassword", "passw", "pass", "qwerty",
+  "qwertyuiop", "asdfgh", "asdfghjkl", "zxcvbnm", "abc", "abcdef", "abcdefgh", "admin", "administrador", "root",
+  "login", "teste", "test", "usuario", "user", "brasil", "loja", "mo", "iloveyou", "teamo", "amor", "deus",
+  "jesus", "flamengo", "corinthians", "palmeiras", "gremio", "internacional", "abcd", "aaaa", "welcome",
+  "bemvindo", "letmein", "dragon", "monkey", "princesa", "estrela", "familia", "felicidade",
+]);
+const SEQUENCES = "abcdefghijklmnopqrstuvwxyz qwertyuiopasdfghjklzxcvbnm 01234567890 09876543210";
+
+export function isCommonPassword(value: string): boolean {
+  if (!value) {
+    return false;
+  }
+  const normalized = value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Mn}/gu, "")
+    .replace(/[^\p{L}\p{N}]/gu, "");
+  if (new Set(normalized).size <= 2) {
+    return true;
+  }
+  if (normalized.length >= 6 && SEQUENCES.includes(normalized)) {
+    return true;
+  }
+  const letters = normalized.replace(/[^\p{L}]/gu, "");
+  return COMMON_WORDS.has(letters) || COMMON_WORDS.has([...letters].reverse().join(""));
+}
+
 export function validatePassword(value: string): string | null {
   if (!value) {
     return "Informe a senha.";
   }
-  if (value.length < 8 || value.length > 128) {
-    return "A senha deve ter entre 8 e 128 caracteres.";
+  if (value.length < 12) {
+    return "A senha precisa ter pelo menos 12 caracteres. Uma frase funciona bem.";
   }
-  if (!/[A-Z]/.test(value) || !/[a-z]/.test(value) || !/\d/.test(value)) {
-    return "A senha precisa ter letra maiúscula, letra minúscula e número.";
+  if (value.length > 128) {
+    return "A senha pode ter no máximo 128 caracteres.";
+  }
+  if (isCommonPassword(value)) {
+    return "Essa senha é muito comum. Escolha outra, de preferência uma frase.";
   }
   return null;
 }

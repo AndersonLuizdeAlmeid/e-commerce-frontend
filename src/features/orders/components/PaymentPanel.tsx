@@ -208,7 +208,7 @@ export function PaymentPanel({
               }}
               className="inline-flex min-h-11 w-full items-center justify-center border border-dashed border-tinta/40 text-sm text-tinta-suave"
             >
-              Simular pagamento aprovado (só em desenvolvimento)
+              Simular pagamento aprovado (pagamento de teste)
             </button>
           )}
         </div>

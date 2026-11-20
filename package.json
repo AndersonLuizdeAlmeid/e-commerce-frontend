@@ -12,7 +12,12 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "gen:api": "openapi-typescript http://localhost:5001/openapi/v1.json -o src/shared/api/schema.d.ts"
+    "gen:api": "openapi-typescript http://localhost:5001/openapi/v1.json -o src/shared/api/schema.d.ts",
+    "e2e": "playwright test",
+    "e2e:build": "node scripts/e2e-build.mjs",
+    "e2e:images": "docker build --target api -t mo-e2e-api:local ../e-commerce-backend && docker build --target migrator -t mo-e2e-migrator:local ../e-commerce-backend",
+    "e2e:stack": "docker compose -f e2e/compose.yml up -d",
+    "e2e:down": "docker compose -f e2e/compose.yml down"
   },
   "dependencies": {
     "@dnd-kit/core": "6.3.1",
@@ -39,5 +44,8 @@
     "tailwindcss": "4.3.5",
     "typescript": "5.9.3",
     "vitest": "4.1.12"
+  },
+  "overrides": {
+    "playwright-core": "1.65.0"
   }
 }

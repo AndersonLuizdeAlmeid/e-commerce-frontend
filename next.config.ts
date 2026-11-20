@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { isStaging, stagingHeaders } from "./src/shared/lib/environment";
 import { securityHeaders } from "./src/shared/lib/security-headers";
 
 // Fotos enviadas pelo painel (RF-061): RustFS local em dev; em produção, o domínio público do R2.
@@ -8,14 +9,18 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   output: "standalone",
   // CSP e demais headers de segurança (arquivo 17 §2, entrega 6 §3 P5). CSP_MODE=enforce bloqueia; vazio só reporta.
+  // No staging, também X-Robots-Tag: noindex em tudo (entrega 6 §3, P13).
   async headers() {
-    return securityHeaders({
-      apiUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001",
-      siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-      imagesUrl: process.env.NEXT_PUBLIC_IMAGES_URL,
-      cspMode: process.env.CSP_MODE,
-      development: process.env.NODE_ENV !== "production",
-    });
+    return [
+      ...securityHeaders({
+        apiUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001",
+        siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+        imagesUrl: process.env.NEXT_PUBLIC_IMAGES_URL,
+        cspMode: process.env.CSP_MODE,
+        development: process.env.NODE_ENV !== "production",
+      }),
+      ...stagingHeaders(isStaging(process.env.NEXT_PUBLIC_ENV)),
+    ];
   },
   images: {
     // SEO-09: next/image converte para AVIF/WebP e gera tamanhos responsivos.

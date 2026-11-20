@@ -7,7 +7,7 @@ import { errorMessage, fieldErrors } from "@/shared/api/problem";
 import { FormAlert, SubmitButton, TextField, primaryButtonClass } from "@/shared/ui/form";
 import { confirmEmail, forgotPassword, resetPassword } from "../api";
 import { useAuth } from "../AuthProvider";
-import { validateEmail, validatePassword } from "../validation";
+import { PASSWORD_HINT, validateEmail, validatePassword } from "../validation";
 
 /** RF-008: a resposta é sempre a mesma, exista ou não a conta. */
 export function ForgotPasswordForm() {
@@ -121,7 +121,7 @@ export function ResetPasswordForm() {
         type="password"
         autoComplete="new-password"
         required
-        hint="Mínimo de 8 caracteres, com maiúscula, minúscula e número."
+        hint={PASSWORD_HINT}
         error={errors.newPassword}
       />
       <TextField label="Confirme a nova senha" name="confirmPassword" type="password" autoComplete="new-password" required error={errors.confirmPassword} />
