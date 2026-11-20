@@ -29,3 +29,8 @@ updates:
     groups:
       docker-minor-patch:
         update-types: [minor, patch]
+    # O Node da imagem acompanha o do CI (node-version: 22). Trocar a versão maior é decisão, não atualização: o 26 entrou
+    # sozinho em 20/11/2026 sem o CI rodar com ele.
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
