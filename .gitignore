@@ -11,3 +11,9 @@ npm-debug.log*
 
 # Capturas temporárias da revisão de design
 .impeccable/review/
+
+# Playwright (E2E)
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

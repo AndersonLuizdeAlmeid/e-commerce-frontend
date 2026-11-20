@@ -59,10 +59,54 @@ jobs:
           curl -sf http://localhost:5099/api/v1/catalog/categories > /dev/null || (node scripts/ci-api-stub.mjs &)
           npx --yes @lhci/cli@0.15.1 autorun
 
+  # Fluxos críticos de ponta a ponta com axe (entrega 6.4 do backend, P16): pilha em container com a API da main do
+  # backend (tag `main`, pública no GHCR), plataformas falsas e o build de produção da loja. O pagamento no sandbox do
+  # Mercado Pago fica no roteiro manual da homologação.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+
+      # Sem as variáveis E2E_API_IMAGE / E2E_MIGRATOR_IMAGE no repositório, usa a tag `main` publicada pelo backend.
+      - name: Imagens da API
+        env:
+          API_IMAGE: ${{ vars.E2E_API_IMAGE }}
+          MIGRATOR_IMAGE: ${{ vars.E2E_MIGRATOR_IMAGE }}
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          echo "E2E_API_IMAGE=${API_IMAGE:-ghcr.io/$owner/ecommerce-api:main}" >> "$GITHUB_ENV"
+          echo "E2E_MIGRATOR_IMAGE=${MIGRATOR_IMAGE:-ghcr.io/$owner/ecommerce-migrator:main}" >> "$GITHUB_ENV"
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Pilha de E2E
+        run: docker compose -f e2e/compose.yml up -d
+      - run: npm run e2e:build
+      - run: npx playwright test
+
+      - if: failure()
+        name: Logs da pilha
+        run: docker compose -f e2e/compose.yml logs --no-color api migrator > e2e-stack.log 2>&1 || true
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-relatorio
+          path: |
+            playwright-report/
+            test-results/
+            e2e-stack.log
+          retention-days: 7
+
   # Em PR só constrói e verifica; na main publica no GHCR (pública) com os endereços do ambiente dev gravados no build.
   image:
     runs-on: ubuntu-latest
-    needs: [build, secrets]
+    needs: [build, secrets, e2e]
     # Os endereços vêm das variáveis do ambiente dev, que só a main alcança.
     environment: ${{ github.event_name == 'push' && 'dev' || '' }}
     permissions:
