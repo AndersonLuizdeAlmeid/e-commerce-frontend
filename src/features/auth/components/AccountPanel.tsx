@@ -7,7 +7,7 @@ import { errorMessage, fieldErrors } from "@/shared/api/problem";
 import { FormAlert, SubmitButton, TextField } from "@/shared/ui/form";
 import { changePassword, getProfile, resendConfirmation, updateProfile, type Profile } from "../api";
 import { useAuth } from "../AuthProvider";
-import { validateCpf, validateFullName, validatePassword, validatePhone } from "../validation";
+import { PASSWORD_HINT, validateCpf, validateFullName, validatePassword, validatePhone } from "../validation";
 
 /** Área do cliente (RF-005, RF-006, RF-009): client component, fora do índice (arquivo 24 §1). */
 export function AccountPanel() {
@@ -233,7 +233,7 @@ function ChangePasswordForm() {
         name="newPassword"
         type="password"
         autoComplete="new-password"
-        hint="Mínimo de 8 caracteres, com maiúscula, minúscula e número."
+        hint={PASSWORD_HINT}
         error={errors.newPassword}
       />
       <SubmitButton pending={pending}>Trocar senha</SubmitButton>

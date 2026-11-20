@@ -179,6 +179,8 @@ jobs:
             NEXT_PUBLIC_STORE_ADDRESS=${{ vars.STORE_ADDRESS }}
             NEXT_PUBLIC_STORE_EMAIL=${{ vars.STORE_EMAIL }}
             NEXT_PUBLIC_STORE_PHONE=${{ vars.STORE_PHONE }}
+            # "staging" no ambiente de testes da equipe: faixa no topo e nada indexado pelos buscadores.
+            NEXT_PUBLIC_ENV=${{ vars.STORE_ENV }}
           provenance: mode=max
           sbom: true
 

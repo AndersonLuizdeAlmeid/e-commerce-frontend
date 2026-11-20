@@ -2,11 +2,15 @@ import { describe, expect, it } from "vitest";
 import { safeNextPath, validateCpf, validateEmail, validateFullName, validatePassword, validatePhone } from "./validation";
 
 describe("validação dos formulários de conta", () => {
-  it("exige senha forte como a API (RF-001 CA3)", () => {
-    expect(validatePassword("Senha@123")).toBeNull();
-    expect(validatePassword("curta1A")).toMatch(/entre 8 e 128/);
-    expect(validatePassword("semnumeroA")).toMatch(/maiúscula, letra minúscula e número/);
-    expect(validatePassword("SEMMINUSCULA1")).not.toBeNull();
+  it("pede 12 caracteres e recusa senha comum, sem regra de composição, como a API (entrega 6, S4)", () => {
+    expect(validatePassword("minha joia preferida da loja")).toBeNull();
+    expect(validatePassword("anéis de prata no domingo")).toBeNull();
+    expect(validatePassword("Joia-Preferida-123")).toBeNull();
+    expect(validatePassword("Senha@12345")).toMatch(/pelo menos 12/);
+    for (const common of ["senha12345678", "Password@2026", "123456789012", "qwertyuiopas", "aaaaaaaaaaaa", "Minha-Senha-2026!"]) {
+      expect(validatePassword(common)).toMatch(/muito comum/);
+    }
+    expect(validatePassword("a".repeat(60) + "b".repeat(60) + "c".repeat(9))).toMatch(/no máximo 128/);
   });
 
   it("valida CPF pelos dígitos verificadores e aceita vazio", () => {

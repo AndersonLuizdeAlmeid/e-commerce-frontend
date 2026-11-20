@@ -3,7 +3,7 @@ export const API_URL = process.env.E2E_API_URL ?? "http://localhost:5101";
 export const MAILPIT_URL = process.env.E2E_MAILPIT_URL ?? "http://localhost:8125";
 
 /** Administradora do seed de desenvolvimento (appsettings.Development.json do backend). */
-export const ADMIN = { email: "admin@loja.local", password: "Admin@12345" } as const;
+export const ADMIN = { email: "admin@loja.local", password: "Admin-Loja-12345" } as const;
 
 /** Senha das clientes criadas pelos testes. Só existe neste banco descartável. */
 export const CUSTOMER_PASSWORD = "E2e-Senha-123";

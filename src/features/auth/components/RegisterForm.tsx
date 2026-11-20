@@ -6,7 +6,7 @@ import { useState } from "react";
 import { errorMessage, fieldErrors } from "@/shared/api/problem";
 import { FormAlert, SubmitButton, TextField } from "@/shared/ui/form";
 import { useAuth } from "../AuthProvider";
-import { safeNextPath, validateCpf, validateEmail, validateFullName, validatePassword, validatePhone } from "../validation";
+import { PASSWORD_HINT, safeNextPath, validateCpf, validateEmail, validateFullName, validatePassword, validatePhone } from "../validation";
 
 type Errors = Partial<Record<"fullName" | "email" | "phone" | "cpf" | "password" | "confirmPassword", string>>;
 
@@ -76,7 +76,7 @@ export function RegisterForm() {
         type="password"
         autoComplete="new-password"
         required
-        hint="Mínimo de 8 caracteres, com maiúscula, minúscula e número."
+        hint={PASSWORD_HINT}
         error={errors.password}
       />
       <TextField label="Confirme a senha" name="confirmPassword" type="password" autoComplete="new-password" required error={errors.confirmPassword} />

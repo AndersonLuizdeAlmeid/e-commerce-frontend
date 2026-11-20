@@ -4,6 +4,7 @@ import { AuthProvider } from "@/features/auth/AuthProvider";
 import { organizationJsonLd, websiteJsonLd } from "@/features/catalog/json-ld";
 import { SITE_NAME, SITE_SLOGAN, siteUrl } from "@/shared/lib/site";
 import { JsonLd } from "@/shared/ui/JsonLd";
+import { TestEnvironmentBanner } from "@/shared/ui/TestEnvironmentBanner";
 import "./globals.css";
 
 // Prata (Didone feita para tela) ecoa o monograma "MO"; Jost é a voz da interface (specs/26 §2.3).
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="pt-BR" className={`${prata.variable} ${jost.variable}`}>
       <body className="flex min-h-screen flex-col font-sans antialiased">
+        <TestEnvironmentBanner />
         <AuthProvider>
           <JsonLd data={[organizationJsonLd(siteUrl(), SITE_NAME), websiteJsonLd(siteUrl(), SITE_NAME)]} />
           {children}
